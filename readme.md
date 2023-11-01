@@ -107,6 +107,12 @@ If the pivots and orientations are not correct, then the model and other gamepla
 
 How you achieve this will depend on your export process and import settings, but the important thing is that in Unity, if you click on a mesh or dummy object, it shows the correct axes.
 
+## Models must enable mesh read/write
+
+![](Screenshots/readwrite.png)
+
+Models must have their meshes marked as `Read/Write Enabled` in order to import into the game correctly. Various bits and pieces get shuffled around at runtime, and without this setting enabled it can cause errors when aircraft and vehicles are initialized.
+
 ## Creating materials for your models
 
 ![](Screenshots/material.png)
