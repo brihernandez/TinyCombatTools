@@ -155,6 +155,8 @@ These two shared materials are the most commonly used materials for shadows. As 
 
 **It's highly recommend you use these two shared materials for shadows rather than creating your own.**
 
+Stores/munitions do not use shadow meshes. They are generated dynamically at runtime.
+
 ## Shaders
 
 ### TinyDiffuse
