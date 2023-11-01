@@ -184,6 +184,8 @@ In order to remain visible when coplanar with the ground, the shadows have two m
 
 ### v1.1 October 31 2023
 * Renamed the `Materials` folder to `SharedMaterials`
+* Removed the `TCADefault` material
+* Changed WireExample's material to the `V750Mat`
 
 ### v1.0 October 31 2023
 * First release
