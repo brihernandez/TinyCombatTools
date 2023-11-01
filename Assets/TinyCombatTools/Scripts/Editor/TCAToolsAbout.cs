@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class TCAToolsAbout : EditorWindow
 {
-    [MenuItem("Tiny Combat Arena/About")]
+    [MenuItem("Tiny Combat Arena/About", priority = 100)]
     private static void ShowAboutWindow()
     {
         var window = GetWindow(
@@ -13,6 +13,12 @@ public class TCAToolsAbout : EditorWindow
         window.Show();
         window.maxSize = new Vector2(300, 60);
         window.minSize = window.maxSize;
+    }
+
+    [MenuItem("Tiny Combat Arena/Open GitHub Page", priority = 1)]
+    private static void OpenGitHubPage()
+    {
+        Application.OpenURL("https://github.com/brihernandez/TinyCombatTools");
     }
 
     private void OnGUI()

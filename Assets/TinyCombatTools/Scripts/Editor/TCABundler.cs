@@ -15,7 +15,7 @@ public class TCABundler : EditorWindow
 
     private Vector2 ScrollPos = Vector2.zero;
 
-    [MenuItem("Tiny Combat Arena/Open Exporter Toolkit")]
+    [MenuItem("Tiny Combat Arena/Open Asset Bundler", priority = 0)]
     private static void ShowBundlerWindow()
     {
         var window = GetWindow(typeof(TCABundler), utility: false, title: $"TCA Bundler {VersionMajor}.{VersionMinor}");
