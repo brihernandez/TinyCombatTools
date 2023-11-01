@@ -27,7 +27,7 @@ public class TCAToolsAbout : EditorWindow
 
         EditorGUILayout.LabelField("Tiny Combat Tools");
         EditorGUILayout.LabelField("Released October 31 2023");
-        EditorGUILayout.LabelField("Version 1.0");
+        EditorGUILayout.LabelField($"Version {Application.version}");
 
         EditorGUILayout.EndVertical();
     }

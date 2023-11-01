@@ -168,5 +168,8 @@ Anything that's not a specialty material (e.g. [`Canopy`](#canopy)) should be us
 
 # Changelog
 
+### v1.1 October 31 2023
+* Renamed the `Materials` folder to `SharedMaterials`
+
 ### v1.0 October 31 2023
 * First release
