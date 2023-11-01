@@ -40,11 +40,12 @@ The main feature of this toolset is the **TCA Bundler**. It allows the creation 
 For this example, the exported bundle will simply be named `assets`, but the name can be anything
 you choose.
 
-1. Open the TCA Bundler from the dropdown menu `Tiny Combat Arena -> Open Asset Bundler`
-2. Follow the export process in the TCA Bundler tool
-3. Put the exported `assets` file into your mod's directory (`TinyCombatArena/Mods/(YourMod)`)
-4. In your mod's `Mod.json`, add an entry under `Assets` for the newly exported `assets` file
-5. Referencing `assetlist.json`, apply asset paths where desired
+1. Open the `DemoScene` scene to view examples in their native environment
+2. Open the TCA Bundler from the dropdown menu `Tiny Combat Arena -> Open Asset Bundler`
+3. Follow the export process in the TCA Bundler tool
+4. Put the exported `assets` file into your mod's directory (`TinyCombatArena/Mods/(YourMod)`)
+5. In your mod's `Mod.json`, add an entry under `Assets` for the newly exported `assets` file
+6. Referencing `assetlist.json`, apply asset paths where desired
 
 Example `Mod.json` with the new `assets` file in use:
 ```json
