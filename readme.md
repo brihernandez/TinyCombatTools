@@ -97,11 +97,13 @@ It is **critical** that a model and its child meshes have their axes set up in U
 * **Y**: Up
 * **Z**: Forward
 
+These axes **must point in these directions when the mesh is "at rest"**, meaning with no rotations applied to it other than what might be intended. Check the F-4E rotations and pivots for a fairly complex example of what a model's rotations and axes should look like.
+
 **To accurately gauge the object orientations, ensure you have handle settings on `Pivot` and `Local`!**
 
 ![](Screenshots/pivotlocal.png)
 
-If these are not correct, then the model and other gameplay behaviors will not work correctly. One of the biggest advantages of this tool existing inside a Unity project is that you can see *exactly* what your axes will look like before you export them into the game.
+If the pivots and orientations are not correct, then the model and other gameplay behaviors will not work correctly. One of the biggest advantages of this tool existing inside a Unity project is that you can see *exactly* what your axes will look like before you export them into the game.
 
 How you achieve this will depend on your export process and import settings, but the important thing is that in Unity, if you click on a mesh or dummy object, it shows the correct axes.
 
