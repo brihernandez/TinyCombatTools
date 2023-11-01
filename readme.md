@@ -145,7 +145,7 @@ When exporting your assets **do not include these materials** in the mod export 
 
 The way it works is that the assigned material will modify the color property to create the effect. When not afterburning, the material will have a black color assigned. When afterburnering, the color will smoothly ramp up to white. When combined with a white emissive value and texture, you get the afterburner effect in Tiny Combat Arena.
 
-For convenience, both the nozzle interior model and material are provided in `Assets/TinyCombatTools/Content/SharedMaterials`. It's recommended that you use the material provided for your afterburners, and UV map the nozzle interiors of your mesh accordingly.
+For convenience, both the nozzle interior texture and material are provided in `Assets/TinyCombatTools/Content/SharedMaterials`. It's recommended that you use the material provided for your afterburners, and UV map the nozzle interiors of your mesh accordingly.
 
 ### Adding shadows with `ShadowDepthOffset` and `ShadowHeightOffset`
 
