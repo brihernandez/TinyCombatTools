@@ -59,7 +59,7 @@ Example `Mod.json` with the new `assets` file in use:
 }
 ```
 
-Multiple asset bundles can be used if so desired. On game start, this mod will now load the `assets` bundle and any assets inside of it. Notice that once the assets have been exported, an `assetlist.json` will have also been created. This file contains all the directories that can be referenced in the JSON data files.
+Multiple asset bundles can be used if so desired. On game start, this mod will now load the `assets` bundle and any assets inside of it. Once the assets have been exported, an `assetlist.json` will have also been created. This file contains all the directories that can be referenced in the JSON data files.
 
 A typical `assetlist.json` will look something like this:
 
@@ -67,21 +67,21 @@ A typical `assetlist.json` will look something like this:
 assets/mod/aircraft/a10a/a10a.fbx
 assets/mod/aircraft/a10a/a10mat.mat
 assets/mod/aircraft/a10a/a10palette.png
+assets/mod/aircraft/a10a/a10aanimator.controller
 ```
 
 In the below example usage in an aircraft definition, notice how the `ModelPath` and `AnimatorPath` use the full filenames. **The full path as listed in `assetlist.json` must be used, including extensions!**
 
 ```json
-  "Name": "A10A",
-  "DisplayName": "A-10A",
-  "DotColors": [130, 141, 154],
+"Name": "A10A",
+"DisplayName": "A-10A",
+"DotColors": [130, 141, 154],
 
-  "ModelPath": "assets/mod/aircraft/a10a/a10a.fbx",
-  "AnimatorPath": "assets/mod/aircraft/a10a/a10aanimator.controller",
-  "SpawnOffset": -1.875,
-  "SpawnRotation": 4.1,
+"ModelPath": "assets/mod/aircraft/a10a/a10a.fbx",
+"AnimatorPath": "assets/mod/aircraft/a10a/a10aanimator.controller",
+"SpawnOffset": -1.875,
+"SpawnRotation": 4.1,
 ```
-
 
 # Reference
 
