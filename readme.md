@@ -87,7 +87,7 @@ In the below example usage in an aircraft definition, notice how the `ModelPath`
 
 Below is various technical data to help format and export your models using the game's built in shaders and materials.
 
-## Orientation
+## Pivots and Axis Orientations
 
 ![](Screenshots/orientation.png)
 
@@ -107,13 +107,13 @@ If the pivots and orientations are not correct, then the model and other gamepla
 
 How you achieve this will depend on your export process and import settings, but the important thing is that in Unity, if you click on a mesh or dummy object, it shows the correct axes.
 
-## Models must enable mesh read/write
+## Models Must Enable Mesh Read/Write
 
 ![](Screenshots/readwrite.png)
 
 Models must have their meshes marked as `Read/Write Enabled` in order to import into the game correctly. Various bits and pieces get shuffled around at runtime, and without this setting enabled it can cause errors when aircraft and vehicles are initialized.
 
-## Creating materials for your models
+## Creating Materials for Your Models
 
 ![](Screenshots/material.png)
 
@@ -153,7 +153,7 @@ The way it works is that the assigned material will modify the color property to
 
 For convenience, both the nozzle interior texture and material are provided in `Assets/TinyCombatTools/Content/SharedMaterials`. It's recommended that you use the material provided for your afterburners, and UV map the nozzle interiors of your mesh accordingly.
 
-### Adding shadows with `ShadowDepthOffset` and `ShadowHeightOffset`
+### Adding Shadows with `ShadowDepthOffset` and `ShadowHeightOffset`
 
 ![](Screenshots/tinyshadow.png)
 
