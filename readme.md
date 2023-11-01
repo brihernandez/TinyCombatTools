@@ -125,7 +125,7 @@ How you achieve this will depend on your export process and import settings, but
 
 ![](Screenshots/sharedmaterials.png)
 
-Shared Materials are materials which are common among many different objects. These are found in `Assets/TinyCombatTools/Content/Materials`.
+Shared Materials are materials which are common among many different objects. These are found in `Assets/TinyCombatTools/Content/SharedMaterials`.
 
 While it's not strictly required that you use these common materials, it's generally advised in order to maintain commonality with rest of the game. E.g. use the `Canopy` material for the canopies of your aircraft.
 
@@ -142,9 +142,11 @@ When exporting your assets **do not include these materials** in the mod export 
 
 The way it works is that the assigned material will modify the color property to create the effect. When not afterburning, the material will have a black color assigned. When afterburnering, the color will smoothly ramp up to white. When combined with a white emissive value and texture, you get the afterburner effect in Tiny Combat Arena.
 
-For convenience, both the nozzle interior model and material are provided in `Assets/TinyCombatTools/Content/Materials`. It's recommended that you use the material provided for your afterburners, and UV map the nozzle interiors of your mesh accordingly.
+For convenience, both the nozzle interior model and material are provided in `Assets/TinyCombatTools/Content/SharedMaterials`. It's recommended that you use the material provided for your afterburners, and UV map the nozzle interiors of your mesh accordingly.
 
 ### Adding shadows with `ShadowDepthOffset` and `ShadowHeightOffset`
+
+![](Screenshots/tinyshadow.png)
 
 These two shared materials are the most commonly used materials for shadows. As a convention, aircraft shadows use the `ShadowDepthOffset` material, while vehicles use the `ShadowHeightOffset` material.
 
@@ -158,13 +160,25 @@ These two shared materials are the most commonly used materials for shadows. As 
 
 The `TinyDiffuse` shader is the bread and butter of Tiny Combat Arena. It drives the shading of nearly object in the game and automatically handles the game's unique lighting, coloring, and shading.
 
-Anything that's not a specialty material (e.g. [`Canopy`](#canopy)) should be using this shader.
+Anything that's not a specialty material (i.e. canopies and shadows) should be using this shader.
 
 ### TinyCanopy
 
 ![](Screenshots/tinycanopy.png)
 
-`TinyCanopy` is the shader used for all cockpit canopies in the game. This is a **shared material** which means it should **should
+`TinyCanopy` is the shader used for all cockpit canopies in the game. The `Canopy` material as mentioned in [Shared Materials](#shared-materials) is the default implementation that nearly every single aircraft in the game uses.
+
+While everything in Tiny Combat is flat shaded, **it's recommended for the canopy mesh to be smooth shaded**. This allows for the shader to create the smooth highlight contour seen on the top of the canopy.
+
+### TinyShadow
+
+![](Screenshots/tinyshadowtank.png)
+
+The shader used for shadows for all non-static objects in the game. (Static objects use a separate shadow shader that is not included.) The shadows are dithered when viewed up close, but when viewed from afar become solid to ensure they remain visible.
+
+In order to remain visible when coplanar with the ground, the shadows have two means of "cheating" to make sure they are drawn on top. The `HeightOffset` simply offsets them vertically, while the `DepthOffset` instead pulls them forwards towards the camera.
+
+**It's highly recommended that you use the `ShadowDepthOffset` and `ShadowHeightOffset` as described in the [Adding shadows](#adding-shadows-with-shadowdepthoffset-and-shadowheightoffset) section.**
 
 # Changelog
 
