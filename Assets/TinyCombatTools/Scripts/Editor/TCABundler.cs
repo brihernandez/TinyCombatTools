@@ -11,7 +11,6 @@ public class TCABundler : EditorWindow
 {
     private const string ThumbImageName = "thumb.png";
     private const string SteamImageName = "preview.png";
-    private bool generateImagesFlag = false;
 
     public string ProjectModFolder = "MOD";
     public string ExportPath = ""; 

@@ -85,7 +85,7 @@ namespace Falcon.Weapons
 
     [Serializable]
     [CreateAssetMenu(fileName = "Bullet", menuName = "Tiny Combat Arena/Bullet", order = 1)]
-    public class BulletData : LoadableData
+    public class BulletData : ScriptableObject
     {
         public BulletType Type = BulletType.Machinegun;
 
