@@ -2,6 +2,8 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
+using System;
+using Falcon;
 
 public class TCABundler : EditorWindow
 {
@@ -11,7 +13,7 @@ public class TCABundler : EditorWindow
 
     public const int VersionMajor = 1;
     public const int VersionMinor = 0;
-    public const string BundleDefaultName = "assets";
+    public string BundleDefaultName = String.Format("assets_{0}", new ModData().Name);
 
     private Vector2 ScrollPos = Vector2.zero;
 
@@ -49,7 +51,7 @@ public class TCABundler : EditorWindow
         EditorGUILayout.LabelField("2. Verify assets to be exported", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("Below are the assets to be exported, along with their the paths that can be used in JSON config files. Make sure to only export what you need!\n\nExample:\nAssets\\MOD\\Aircraft\\A10A\\A10A.fbx\nAssets\\MOD\\Aircraft\\A10A\\A10Mat.mat\nAssets\\MOD\\Aircraft\\A10A\\A10Palette.png", EditorStyles.helpBox);
 
-        var paths = GetAllExportPaths();
+        var paths = GetAllExportPaths(ProjectModFolder);
         if (paths.Count > 0)
         {
             EditorGUILayout.LabelField("Assets to bundle:");
@@ -107,9 +109,9 @@ public class TCABundler : EditorWindow
         EditorGUILayout.EndVertical();
     }
 
-    private List<string> GetAllExportPaths()
+    public static List<string> GetAllExportPaths(string projectModFolder)
     {
-        var bundleSourcePath = Path.GetFullPath(Path.Combine(Application.dataPath, ProjectModFolder));
+        var bundleSourcePath = Path.GetFullPath(Path.Combine(Application.dataPath, projectModFolder));
         if (!Directory.Exists(bundleSourcePath))
             return new List<string>();
 
@@ -142,7 +144,7 @@ public class TCABundler : EditorWindow
 
         var build = new AssetBundleBuild();
         build.assetBundleName = bundleName;
-        build.assetNames = GetAllExportPaths().ToArray();
+        build.assetNames = GetAllExportPaths(ProjectModFolder).ToArray();
 
         // Assets create several temporary files that are unneeded. Write the asset bundle
         // first to a temporary location.
