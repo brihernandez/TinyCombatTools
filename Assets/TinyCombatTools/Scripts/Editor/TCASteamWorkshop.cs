@@ -5,9 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class TCASteamWorkshop : EditorWindow
 {
@@ -40,40 +38,20 @@ public class TCASteamWorkshop : EditorWindow
 
     private static void TakeSceneScreenshot(string outPath, int X, int Y)
     {
-        // EditorApplication.delayCall += () => {
-
-        // var sw = SceneView.lastActiveSceneView;
-        // var ew = (EditorWindow) sw;
         var cam = Camera.main;
         var oldRT = cam.targetTexture;
         cam.targetTexture = RenderTexture.GetTemporary(X, Y);
-
-        // int width = renderTexture.width;
-        // int height = renderTexture.height;
-
         var outputTexture = new Texture2D(X, Y, TextureFormat.RGB24, false);
 
         RenderTexture.active = cam.targetTexture;
         cam.Render();
-
         outputTexture.ReadPixels(new Rect(0, 0, X, Y), 0, 0);
         outputTexture.Apply();
         Debug.Log("Texture created and readable: " + outputTexture.isReadable);
 
-        // DestroyImmediate(cam.targetTexture);
         cam.targetTexture = oldRT;
-        //
-        //
-        // var p = ew.position;
-        // var w = (int) p.width;
-        // var h = (int) p.height;
-        // var pixels = InternalEditorUtility.ReadScreenPixel(p.position, w, h);
-        // var tex2d = new Texture2D(w, h, TextureFormat.RGB24, false);
-        // tex2d.SetPixels(pixels);
         File.WriteAllBytes(outPath, outputTexture.EncodeToPNG());
-
         AssetDatabase.Refresh();
-        // };
     }
 
     private static bool CheckFieldLength(string content, string fieldName)
@@ -89,13 +67,11 @@ public class TCASteamWorkshop : EditorWindow
             EditorGUILayout.HelpBox($"\"{fieldName}\" length must be >= 4", MessageType.Error, false);
             return false;
         }
-
         return true;
     }
 
     private static string GetNiceName(string fieldName)
     {
-
         return ObjectNames.NicifyVariableName(fieldName);
     }
 
@@ -120,11 +96,11 @@ public class TCASteamWorkshop : EditorWindow
         var status = true;
 
         EditorGUILayout.BeginVertical();
-
         EditorGUILayout.LabelField("1. Select folder to bundle assets from", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("The location of the assets within the Unity project affect the resulting filepaths. It can be worthwhile to use unique folder names to avoid naming collisions.\n\nThis folder MUST be inside the Project's \"Assets\" folder!", EditorStyles.helpBox);
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField(ProjectModFolder, EditorStyles.textField);
+
         if (GUILayout.Button("Select", GUILayout.Width(80)))
         {
             var selectedFolder = EditorUtility.OpenFolderPanel(
@@ -138,10 +114,9 @@ public class TCASteamWorkshop : EditorWindow
 
             Repaint();
         }
+
         EditorGUILayout.EndHorizontal();
-
         EditorGUILayout.Space(10);
-
         EditorGUILayout.LabelField("2. Set the mod details", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("This will be used to generate the required Mod.json file.\n\nAny existing Mod.json file inside the asset path will be rewritten!", EditorStyles.helpBox);
 
@@ -149,6 +124,7 @@ public class TCASteamWorkshop : EditorWindow
         {
             _modData = new ModData();
         }
+
         _modData.Name = EditorGUILayout.TextField("Name", _modData.Name);
         status &= CheckFieldLength(_modData.Name, GetNiceName(nameof(_modData.Name)));
         _modData.DisplayName = EditorGUILayout.TextField("Display Name", _modData.DisplayName);
@@ -184,6 +160,7 @@ public class TCASteamWorkshop : EditorWindow
         GUILayout.FlexibleSpace();
         var scale = EditorGUIUtility.pixelsPerPoint;
         status &= _texThumbnail != null;
+
         if (_texThumbnail != null)
         {
             GUILayout.Box(_texThumbnail, GUILayout.Height(256.0f / scale), GUILayout.Width(256.0f / scale));
@@ -192,11 +169,9 @@ public class TCASteamWorkshop : EditorWindow
         {
             GUILayout.Box($"\n\n\nMissing thumbnail\n\nPlease generate or create {ThumbImageName}", GUILayout.Height(256.0f / scale), GUILayout.Width(256.0f / scale));
         }
+
         GUILayout.FlexibleSpace();
         EditorGUILayout.EndHorizontal();
-
-        ///
-
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("4. Generate or verify Preview", EditorStyles.boldLabel);
         EditorGUILayout.LabelField($"A \"{SteamImageName}\" file will be created in the mod folder path if you press \"Generate preview\" (using your main camera view), or you can add one yourself. Make sure the project folder it's a valid one!", EditorStyles.helpBox);
@@ -225,6 +200,7 @@ public class TCASteamWorkshop : EditorWindow
         GUILayout.FlexibleSpace();
         var previewScale = EditorGUIUtility.pixelsPerPoint;
         status &= _texPreview != null;
+
         if (_texPreview != null)
         {
             GUILayout.Box(_texPreview, GUILayout.Height(_texPreview.height / 2 / previewScale), GUILayout.Width(_texPreview.width /2 / previewScale));
@@ -233,16 +209,14 @@ public class TCASteamWorkshop : EditorWindow
         {
             GUILayout.Box($"\n\n\nMissing Preview\n\nPlease generate or create {SteamImageName}", GUILayout.Height(_texPreview.height / 2 / previewScale), GUILayout.Width(_texPreview.width/2 / previewScale));
         }
+
         GUILayout.FlexibleSpace();
         EditorGUILayout.EndHorizontal();
-
-        ///
-
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("5. Verify assets to be exported", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("Below are the assets to be exported, along with their the paths that can be used in JSON config files. Make sure to only export what you need!\n\nExample:\nAssets\\MOD\\Aircraft\\A10A\\A10A.fbx\nAssets\\MOD\\Aircraft\\A10A\\A10Mat.mat\nAssets\\MOD\\Aircraft\\A10A\\A10Palette.png", EditorStyles.helpBox);
-
         var paths = TCABundler.GetAllExportPaths(ProjectModFolder);
+
         if (paths.Count > 0)
         {
             EditorGUILayout.LabelField("Assets to bundle:");
@@ -257,14 +231,12 @@ public class TCASteamWorkshop : EditorWindow
         {
             EditorGUILayout.LabelField("NO ASSETS FOUND!");
         }
-    
-        ///
 
         EditorGUILayout.LabelField("6. Export Asset Bundle", EditorStyles.boldLabel);
         EditorGUILayout.LabelField($"Can be exported directly into your mod's folder inside the game's install.\n\nExample:\nC:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10/{bundleName}", EditorStyles.helpBox);
-
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField(ExportPath, EditorStyles.textField);
+        
         if (GUILayout.Button("Select", GUILayout.Width(80)))
         {
             ExportPath = EditorUtility.SaveFolderPanel(
@@ -276,38 +248,37 @@ public class TCASteamWorkshop : EditorWindow
         }
 
         EditorGUILayout.EndHorizontal();
-
         EditorGUILayout.Space(10);
-
         status &= ExportPath.Length > 0 && paths.Count > 0;
-        ///
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("7. Submit to Steam Workshop", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("You can either submit as a new mod, or to update an existing one you've previously submitted. If you try to update but the mod doesn't exist you'll get an error.", EditorStyles.helpBox);
-
         EditorGUILayout.BeginHorizontal();
-
         GUI.enabled = status;
-        if (GUILayout.Button("Submit NEW Mod"))
+        
+        if (GUILayout.Button("Export Bundle"))
         {
             GenerateMODJson();
             BuildBundle(Path.Combine(ExportPath, bundleName));
-            // System.Diagnostics.Process.Start(Path.GetDirectoryName(ExportPath));
         }
-
-        // var assetListPath = hasValidExportPath ? Path.Combine(Path.GetDirectoryName(ExportPath), "assetlist.txt") : "";
-        // GUI.enabled = hasValidExportPath && File.Exists(assetListPath);
-
-        if (GUILayout.Button("Submit Mod UPDATE"))
-        {
-            // System.Diagnostics.Process.Start(assetListPath);
-        }
-        GUI.enabled = false;
-
+        
         EditorGUILayout.EndHorizontal();
-
+        EditorGUILayout.BeginHorizontal();
+        
+        if (GUILayout.Button("Open Export Folder"))
+            System.Diagnostics.Process.Start(Path.GetDirectoryName(ExportPath));
+        
+        GUI.enabled = true;
+        bool hasValidExportPath = ExportPath.Length > 0 && paths.Count > 0;
+        var assetListPath = hasValidExportPath ? Path.Combine(Path.GetDirectoryName(ExportPath), "assetlist.txt") : "";
+        GUI.enabled = hasValidExportPath && File.Exists(assetListPath);
+        
+        if (GUILayout.Button("Open Asset List"))
+            System.Diagnostics.Process.Start(assetListPath);
+        
+        GUI.enabled = false;
+        EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space(10);
-
         EditorGUILayout.EndVertical();
         EditorGUILayout.EndScrollView();
     }
@@ -333,7 +304,6 @@ public class TCASteamWorkshop : EditorWindow
             x = x.Replace(Path.DirectorySeparatorChar, '/');
             files[i] = x.ToLower();
         }
-
         return files;
     }
 
@@ -384,7 +354,4 @@ public class TCASteamWorkshop : EditorWindow
             Debug.LogError($"Failed to export bundle to {exportPath}!");
         }
     }
-
-    //private void CleanFiles
-
 }
