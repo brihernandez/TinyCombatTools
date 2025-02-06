@@ -1,9 +1,9 @@
+using Falcon;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
-using System.IO;
-using System.Collections.Generic;
-using System;
-using Falcon;
 
 public class TCABundler : EditorWindow
 {
