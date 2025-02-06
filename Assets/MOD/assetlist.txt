@@ -1,0 +1,10 @@
+Below are the paths for all the assets included in the asset bundle "assets_Duck"
+Example usage in an aircraft definition:
+"ModelPath": "assets/microfalcon/export/aircraft/resources/a10a/a10a.fbx"
+
+assets/mod_duck/duck/duckmat.mat
+assets/mod_duck/duck/duckpal.png
+assets/mod_duck/duck/preview.png
+assets/mod_duck/duck/samplebullet.asset
+assets/mod_duck/duck/thumb.png
+assets/mod_duck/duck/uglyduck.fbx
