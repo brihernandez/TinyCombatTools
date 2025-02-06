@@ -121,7 +121,7 @@ Models must have their meshes marked as `Read/Write Enabled` in order to import 
 2. Configure color, emission, and texture
     - **Color:** For most materials with a texture, set this white. A color can be used to modify the texture color, or to color an untextured material.
     - **Emission:** For most materials, set this black. Emission allows a material to be a bright color regardless of lighting. Best used for things such as lights. See the `F4EmissiveMat` for an example.
-    - **Texture:** Image to be used for texturing the object. TCA uses palette textures, but this purely a stylistic choice.
+    - **Texture:** Image to be used for texturing the object. TCA uses palette textures, but this purely a stylistic choice and convention, and is not enforced by any part of the art or rendering pipeline.
 3. Ensure that `Enable GPU Instancing` is checked for optimized rendering.
 
 ### TinyDiffuse Miscellaneous Options
@@ -169,7 +169,7 @@ Stores/munitions do not use shadow meshes. They are generated dynamically at run
 
 ![](Screenshots/tinydiffuse.png)
 
-The `TinyDiffuse` shader is the bread and butter of Tiny Combat Arena. It drives the shading of nearly object in the game and automatically handles the game's unique lighting, coloring, and shading.
+The `TinyDiffuse` shader is the bread and butter of Tiny Combat Arena. It drives the shading of nearly every object in the game and automatically handles the game's unique lighting, coloring, and shading.
 
 Anything that's not a specialty material (i.e. canopies and shadows) should be using this shader.
 
