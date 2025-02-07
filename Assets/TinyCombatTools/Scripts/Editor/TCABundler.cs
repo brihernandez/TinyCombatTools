@@ -22,22 +22,23 @@ public class ModData
 
 public class TCABundler : EditorWindow
 {
-    private const string ThumbImageName = "thumb.png";
-    private const string SteamImageName = "preview.png";
-
-    public string ProjectModFolder = "MOD";
-    public string ExportPath = "";
+    private string ProjectModFolder = "MOD";
+    private string ExportPath = "";
     private string BundleName = "";
+
+    private Texture2D ThumbnailImage = null;
+    private Texture2D PreviewImage = null;
+
+    private Vector2 ScrollPos;
+    private Vector2 scrollPosition;
 
     public const int VersionMajor = 1;
     public const int VersionMinor = 1;
 
-    private Texture2D _texThumbnail = null;
-    private Texture2D _texPreview = null;
-    private Vector2 ScrollPos;
-    private Vector2 scrollPosition;
-
     private static ModData _modData = new ModData();
+
+    private const string DefaultThumbnailImageName = "thumb.png";
+    private const string DefaultPreviewImageName = "preview.png";
 
     [MenuItem("Tiny Combat Arena/Open Asset Bundler", priority = 0)]
     private static void ShowBundlerWindow()
@@ -89,8 +90,8 @@ public class TCABundler : EditorWindow
     private void GenerateMODJson()
     {
         BundleName = "assets";
-        _modData.Thumbnail = BundleName + '/' + ProjectModFolder.ToLower() + '/' + ThumbImageName;
-        _modData.Preview = BundleName + '/' + ProjectModFolder.ToLower() + '/' + SteamImageName;
+        _modData.Thumbnail = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(ThumbnailImage));
+        _modData.Preview = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(PreviewImage));
         _modData.Assets.Clear();
         _modData.Assets = new List<string>(new[] { BundleName });
 
@@ -148,8 +149,9 @@ public class TCABundler : EditorWindow
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("3. Generate or verify thumbnail", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField($"A \"{ThumbImageName}\" file will be created in the mod folder path if you press \"Generate Thumbnail\" (using your main camera view), or you can add one yourself. Make sure the project folder it's a valid one!", EditorStyles.helpBox);
+        EditorGUILayout.LabelField($"A \"{DefaultThumbnailImageName}\" file will be created in the mod folder path if you press \"Generate Thumbnail\" (using your main camera view), or you can add one yourself. Make sure the project folder it's a valid one!", EditorStyles.helpBox);
 
+        ThumbnailImage = EditorGUILayout.ObjectField(ThumbnailImage, typeof(Texture2D), false) as Texture2D;
         if (GUILayout.Button("Generate Thumbnail"))
         {
             var rootPath = Path.Combine(Application.dataPath, ProjectModFolder);
@@ -159,36 +161,37 @@ public class TCABundler : EditorWindow
             }
             else
             {
-                TakeSceneScreenshot(Path.Combine(rootPath, ThumbImageName), 256, 256);
-                _texThumbnail = null;
+                TakeSceneScreenshot(Path.Combine(rootPath, DefaultThumbnailImageName), 256, 256);
+                ThumbnailImage = null;
             }
         }
 
-        if (_texThumbnail is null && File.Exists(Path.Combine(Application.dataPath, ProjectModFolder, ThumbImageName)))
+        if (ThumbnailImage == null && File.Exists(Path.Combine(Application.dataPath, ProjectModFolder, DefaultThumbnailImageName)))
         {
-            _texThumbnail = (Texture2D)AssetDatabase.LoadAssetAtPath(Path.Combine("Assets", ProjectModFolder, ThumbImageName), typeof(Texture2D));
+            ThumbnailImage = (Texture2D)AssetDatabase.LoadAssetAtPath(Path.Combine("Assets", ProjectModFolder, DefaultThumbnailImageName), typeof(Texture2D));
         }
 
         EditorGUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         var scale = EditorGUIUtility.pixelsPerPoint;
-        status &= _texThumbnail != null;
+        status &= ThumbnailImage != null;
 
-        if (_texThumbnail != null)
+        if (ThumbnailImage != null)
         {
-            GUILayout.Box(_texThumbnail, GUILayout.Height(256.0f / scale), GUILayout.Width(256.0f / scale));
+            GUILayout.Box(ThumbnailImage, GUILayout.Height(256.0f / scale), GUILayout.Width(256.0f / scale));
         }
         else
         {
-            GUILayout.Box($"\n\n\nMissing thumbnail\n\nPlease generate or create {ThumbImageName}", GUILayout.Height(256.0f / scale), GUILayout.Width(256.0f / scale));
+            GUILayout.Box($"\n\n\nMissing thumbnail\n\nPlease generate or create {DefaultThumbnailImageName}", GUILayout.Height(256.0f / scale), GUILayout.Width(256.0f / scale));
         }
 
         GUILayout.FlexibleSpace();
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("4. Generate or verify Preview", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField($"A \"{SteamImageName}\" file will be created in the mod folder path if you press \"Generate preview\" (using your main camera view), or you can add one yourself. Make sure the project folder it's a valid one!", EditorStyles.helpBox);
+        EditorGUILayout.LabelField($"A \"{DefaultPreviewImageName}\" file will be created in the mod folder path if you press \"Generate preview\" (using your main camera view), or you can add one yourself. Make sure the project folder it's a valid one!", EditorStyles.helpBox);
 
+        PreviewImage = EditorGUILayout.ObjectField(PreviewImage, typeof(Texture2D), false) as Texture2D;
         if (GUILayout.Button("Generate Preview"))
         {
             var rootPath = Path.Combine(Application.dataPath, ProjectModFolder);
@@ -198,28 +201,28 @@ public class TCABundler : EditorWindow
             }
             else
             {
-                TakeSceneScreenshot(Path.Combine(rootPath, SteamImageName), 635, 358);
-                _texPreview = null;
+                TakeSceneScreenshot(Path.Combine(rootPath, DefaultPreviewImageName), 635, 358);
+                PreviewImage = null;
             }
         }
 
-        if (_texPreview is null && File.Exists(Path.Combine(Application.dataPath, ProjectModFolder, SteamImageName)))
+        if (PreviewImage == null && File.Exists(Path.Combine(Application.dataPath, ProjectModFolder, DefaultPreviewImageName)))
         {
-            _texPreview = (Texture2D)AssetDatabase.LoadAssetAtPath(Path.Combine("Assets", ProjectModFolder, SteamImageName), typeof(Texture2D));
+            PreviewImage = (Texture2D)AssetDatabase.LoadAssetAtPath(Path.Combine("Assets", ProjectModFolder, DefaultPreviewImageName), typeof(Texture2D));
         }
 
         EditorGUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         var previewScale = EditorGUIUtility.pixelsPerPoint;
-        status &= _texPreview != null;
+        status &= PreviewImage != null;
 
-        if (_texPreview != null)
+        if (PreviewImage != null)
         {
-            GUILayout.Box(_texPreview, GUILayout.Height(_texPreview.height / 2 / previewScale), GUILayout.Width(_texPreview.width / 2 / previewScale));
+            GUILayout.Box(PreviewImage, GUILayout.Height(PreviewImage.height / 2 / previewScale), GUILayout.Width(PreviewImage.width / 2 / previewScale));
         }
         else
         {
-            GUILayout.Box($"\n\n\nMissing thumbnail\n\nPlease generate or create {SteamImageName}", GUILayout.Height(256.0f / scale), GUILayout.Width(256.0f / scale));
+            GUILayout.Box($"\n\n\nMissing thumbnail\n\nPlease generate or create {DefaultPreviewImageName}", GUILayout.Height(256.0f / scale), GUILayout.Width(256.0f / scale));
         }
 
         GUILayout.FlexibleSpace();
@@ -309,14 +312,20 @@ public class TCABundler : EditorWindow
         // .meta files aren't needed.
         files.RemoveAll(name => name.EndsWith(".meta"));
 
-        // Everything asset bundle related is forced to lowercase.
+        // Asset bundles have a specific kind of formatting.
         for (int i = 0; i < files.Count; ++i)
-        {
-            var x = files[i].Replace(Path.GetFullPath(Application.dataPath), "Assets");
-            x = x.Replace(Path.DirectorySeparatorChar, '/');
-            files[i] = x.ToLower();
-        }
+            files[i] = CreateAssetPathFromFilePath(files[i]);
+
         return files;
+    }
+
+    public static string CreateAssetPathFromFilePath(string filePath)
+    {
+        // Everything asset bundle related is forced to lowercase.
+        var assetPath = filePath.Replace(Path.GetFullPath(Application.dataPath), "Assets");
+        assetPath = assetPath.Replace(Path.DirectorySeparatorChar, '/');
+        assetPath = assetPath.ToLower();
+        return assetPath;
     }
 
     private void BuildBundle(string exportPath)
