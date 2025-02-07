@@ -29,8 +29,8 @@ public class TCABundler : EditorWindow
     private Texture2D ThumbnailImage = null;
     private Texture2D PreviewImage = null;
 
-    private Vector2 ScrollPos;
-    private Vector2 scrollPosition;
+    private Vector2 AssetBundleScrollPosition;
+    private Vector2 MainScrollPosition;
 
     public const int VersionMajor = 1;
     public const int VersionMinor = 1;
@@ -107,7 +107,7 @@ public class TCABundler : EditorWindow
 
     private void OnGUI()
     {
-        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+        MainScrollPosition = EditorGUILayout.BeginScrollView(MainScrollPosition);
         var status = true;
 
         EditorGUILayout.BeginVertical();
@@ -235,8 +235,8 @@ public class TCABundler : EditorWindow
         if (paths.Count > 0)
         {
             EditorGUILayout.LabelField("Assets to bundle:");
-            ScrollPos = EditorGUILayout.BeginScrollView(
-                scrollPosition: ScrollPos,
+            AssetBundleScrollPosition = EditorGUILayout.BeginScrollView(
+                scrollPosition: AssetBundleScrollPosition,
                 EditorStyles.helpBox, GUILayout.MinHeight(100), GUILayout.ExpandHeight(true));
             foreach (var path in paths)
                 EditorGUILayout.LabelField(path);
