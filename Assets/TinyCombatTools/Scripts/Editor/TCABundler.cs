@@ -37,7 +37,7 @@ public class TCABundler : EditorWindow
     private Vector2 ScrollPos;
     private Vector2 scrollPosition;
 
-    private ModData _modData = new ModData();
+    private static ModData _modData = new ModData();
 
     [MenuItem("Tiny Combat Arena/Open Asset Bundler", priority = 0)]
     private static void ShowBundlerWindow()
