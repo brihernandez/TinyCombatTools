@@ -27,7 +27,7 @@ public class TCABundler : EditorWindow
 
     public string ProjectModFolder = "MOD";
     public string ExportPath = "";
-    string bundleName = "";
+    private string BundleName = "";
 
     public const int VersionMajor = 1;
     public const int VersionMinor = 1;
@@ -88,11 +88,11 @@ public class TCABundler : EditorWindow
 
     private void GenerateMODJson()
     {
-        bundleName = string.Format("assets_{0}", _modData.Name);
-        _modData.Thumbnail = bundleName + '/' + ProjectModFolder.ToLower() + '/' + ThumbImageName;
-        _modData.Preview = bundleName + '/' + ProjectModFolder.ToLower() + '/' + SteamImageName;
+        BundleName = "assets";
+        _modData.Thumbnail = BundleName + '/' + ProjectModFolder.ToLower() + '/' + ThumbImageName;
+        _modData.Preview = BundleName + '/' + ProjectModFolder.ToLower() + '/' + SteamImageName;
         _modData.Assets.Clear();
-        _modData.Assets = new List<string>(new[] { bundleName });
+        _modData.Assets = new List<string>(new[] { BundleName });
 
         JsonSerializerSettings settings = new JsonSerializerSettings();
         settings.Converters.Add(new StringEnumConverter());
@@ -100,7 +100,7 @@ public class TCABundler : EditorWindow
 
         var jsonText = JsonConvert.SerializeObject(_modData, settings);
         Debug.Log(jsonText);
-        Debug.Log(bundleName);
+        Debug.Log(BundleName);
         File.WriteAllText(ExportPath + "/Mod.json", jsonText);
     }
 
@@ -245,7 +245,7 @@ public class TCABundler : EditorWindow
         }
 
         EditorGUILayout.LabelField("6. Export Asset Bundle", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField($"Can be exported directly into your mod's folder inside the game's install.\n\nExample:\nC:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10/{bundleName}", EditorStyles.helpBox);
+        EditorGUILayout.LabelField($"Can be exported directly into your mod's folder inside the game's install.\n\nExample:\nC:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10/{BundleName}", EditorStyles.helpBox);
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField(ExportPath, EditorStyles.textField);
 
@@ -271,7 +271,7 @@ public class TCABundler : EditorWindow
         if (GUILayout.Button("Export Bundle"))
         {
             GenerateMODJson();
-            BuildBundle(Path.Combine(ExportPath, bundleName));
+            BuildBundle(Path.Combine(ExportPath, BundleName));
         }
 
         EditorGUILayout.EndHorizontal();
