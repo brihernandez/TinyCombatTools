@@ -107,10 +107,9 @@ public class TCABundler : EditorWindow
 
     private void OnGUI()
     {
-        MainScrollPosition = EditorGUILayout.BeginScrollView(MainScrollPosition);
+        MainScrollPosition = EditorGUILayout.BeginScrollView(MainScrollPosition, false, true);
         var status = true;
 
-        EditorGUILayout.BeginVertical();
         EditorGUILayout.LabelField("1. Select folder to bundle assets from", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("The location of the assets within the Unity project affect the resulting filepaths. It can be worthwhile to use unique folder names to avoid naming collisions.\n\nThis folder MUST be inside the Project's \"Assets\" folder!", EditorStyles.helpBox);
         EditorGUILayout.BeginHorizontal();
@@ -125,7 +124,6 @@ public class TCABundler : EditorWindow
 
             if (selectedFolder.StartsWith(Application.dataPath))
                 ProjectModFolder = selectedFolder.Replace(Application.dataPath + "/", "");
-
 
             Repaint();
         }
@@ -291,8 +289,9 @@ public class TCABundler : EditorWindow
 
         GUI.enabled = true;
         EditorGUILayout.EndHorizontal();
+
         EditorGUILayout.Space(10);
-        EditorGUILayout.EndVertical();
+
         EditorGUILayout.EndScrollView();
     }
 
