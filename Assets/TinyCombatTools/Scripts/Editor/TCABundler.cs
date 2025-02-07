@@ -32,8 +32,8 @@ public class TCABundler : EditorWindow
     private Vector2 AssetBundleScrollPosition;
     private Vector2 MainScrollPosition;
 
-    public const int VersionMajor = 1;
-    public const int VersionMinor = 1;
+    public const int VersionMajor = 2;
+    public const int VersionMinor = 0;
 
     private static ModData Mod = new ModData();
 
