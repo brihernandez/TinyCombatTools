@@ -35,7 +35,7 @@ public class TCABundler : EditorWindow
     public const int VersionMajor = 1;
     public const int VersionMinor = 1;
 
-    private static ModData _modData = new ModData();
+    private static ModData Mod = new ModData();
 
     private const string DefaultThumbnailImageName = "thumb.png";
     private const string DefaultPreviewImageName = "preview.png";
@@ -90,16 +90,16 @@ public class TCABundler : EditorWindow
     private void GenerateMODJson()
     {
         BundleName = "assets";
-        _modData.Thumbnail = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(ThumbnailImage));
-        _modData.Preview = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(PreviewImage));
-        _modData.Assets.Clear();
-        _modData.Assets = new List<string>(new[] { BundleName });
+        Mod.Thumbnail = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(ThumbnailImage));
+        Mod.Preview = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(PreviewImage));
+        Mod.Assets.Clear();
+        Mod.Assets = new List<string>(new[] { BundleName });
 
         JsonSerializerSettings settings = new JsonSerializerSettings();
         settings.Converters.Add(new StringEnumConverter());
         settings.Formatting = Formatting.Indented;
 
-        var jsonText = JsonConvert.SerializeObject(_modData, settings);
+        var jsonText = JsonConvert.SerializeObject(Mod, settings);
         Debug.Log(jsonText);
         Debug.Log(BundleName);
         File.WriteAllText(ExportPath + "/Mod.json", jsonText);
@@ -135,17 +135,15 @@ public class TCABundler : EditorWindow
         EditorGUILayout.LabelField("2. Set the mod details", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("This will be used to generate the required Mod.json file.\n\nAny existing Mod.json file inside the asset path will be rewritten!", EditorStyles.helpBox);
 
-        if (_modData == null)
-        {
-            _modData = new ModData();
-        }
+        if (Mod == null)
+            Mod = new ModData();
 
-        _modData.Name = EditorGUILayout.TextField("Name", _modData.Name);
-        status &= CheckFieldLength(_modData.Name, GetNiceName(nameof(_modData.Name)));
-        _modData.DisplayName = EditorGUILayout.TextField("Display Name", _modData.DisplayName);
-        status &= CheckFieldLength(_modData.DisplayName, GetNiceName(nameof(_modData.DisplayName)));
-        _modData.Description = EditorGUILayout.TextField("Description", _modData.Description);
-        status &= CheckFieldLength(_modData.Description, GetNiceName(nameof(_modData.Description)));
+        Mod.Name = EditorGUILayout.TextField("Name", Mod.Name);
+        status &= CheckFieldLength(Mod.Name, GetNiceName(nameof(Mod.Name)));
+        Mod.DisplayName = EditorGUILayout.TextField("Display Name", Mod.DisplayName);
+        status &= CheckFieldLength(Mod.DisplayName, GetNiceName(nameof(Mod.DisplayName)));
+        Mod.Description = EditorGUILayout.TextField("Description", Mod.Description);
+        status &= CheckFieldLength(Mod.Description, GetNiceName(nameof(Mod.Description)));
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("3. Generate or verify thumbnail", EditorStyles.boldLabel);
