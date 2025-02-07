@@ -96,9 +96,12 @@ public class TCABundler : EditorWindow
 
         JsonSerializerSettings settings = new JsonSerializerSettings();
         settings.Converters.Add(new StringEnumConverter());
-        Debug.Log(JsonConvert.SerializeObject(_modData, settings));
+        settings.Formatting = Formatting.Indented;
+
+        var jsonText = JsonConvert.SerializeObject(_modData, settings);
+        Debug.Log(jsonText);
         Debug.Log(bundleName);
-        File.WriteAllText(ExportPath + "/Mod.json", JsonConvert.SerializeObject(_modData, settings));
+        File.WriteAllText(ExportPath + "/Mod.json", jsonText);
     }
 
     private void OnGUI()
