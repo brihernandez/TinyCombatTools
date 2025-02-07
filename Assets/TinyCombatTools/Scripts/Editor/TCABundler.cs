@@ -223,7 +223,7 @@ public class TCABundler : EditorWindow
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("5. Verify assets to be exported", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("Below are the assets to be exported, along with their the paths that can be used in JSON config files. Make sure to only export what you need!\n\nExample:\nAssets\\MOD\\Aircraft\\A10A\\A10A.fbx\nAssets\\MOD\\Aircraft\\A10A\\A10Mat.mat\nAssets\\MOD\\Aircraft\\A10A\\A10Palette.png", EditorStyles.helpBox);
+        EditorGUILayout.LabelField("Below are the assets to be exported, along with their the paths that can be used in JSON config files. Make sure to only export what you need!\n\nExample:\nassets/mod/aircraft/a10a/a10a.fbx\nassets/mod/aircraft/a10a/a10mat.mat\nassets/mod/aircraft/a10a/a10palette.png", EditorStyles.helpBox);
         var paths = GetAllExportPaths(ProjectModFolder);
 
         if (paths.Count > 0)
