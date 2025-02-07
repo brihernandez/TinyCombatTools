@@ -291,7 +291,7 @@ public class TCABundler : EditorWindow
         if (GUILayout.Button("Open Asset List"))
             System.Diagnostics.Process.Start(assetListPath);
 
-        GUI.enabled = false;
+        GUI.enabled = true;
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space(10);
         EditorGUILayout.EndVertical();
