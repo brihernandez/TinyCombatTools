@@ -3,6 +3,7 @@ using Newtonsoft.Json.Converters;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.Rendering.Universal;
 using UnityEngine;
 
 /// <summary>
@@ -40,15 +41,21 @@ public class TCABundler : EditorWindow
     private const string DefaultThumbnailImageName = "thumb.png";
     private const string DefaultPreviewImageName = "preview.png";
 
+    private const int ThumbnailHeight = 256;
+    private const int ThumbnailWidth = 256;
+
+    private const int PreviewWidth = 635;
+    private const int PreviewHeight = 358;
+
     [MenuItem("Tiny Combat Arena/Open Asset Bundler", priority = 0)]
     private static void ShowBundlerWindow()
     {
         var window = GetWindow(typeof(TCABundler), utility: false, title: $"TCA Bundler {VersionMajor}.{VersionMinor}");
         window.Show();
-        window.minSize = new Vector2(400, 500);
+        window.minSize = new Vector2(600, 800);
     }
 
-    private static void TakeSceneScreenshot(string outPath, int X, int Y)
+    private Texture2D TakeSceneScreenshot(string outPath, int X, int Y)
     {
         var cam = Camera.main;
         var oldRT = cam.targetTexture;
@@ -64,6 +71,9 @@ public class TCABundler : EditorWindow
         cam.targetTexture = oldRT;
         File.WriteAllBytes(outPath, outputTexture.EncodeToPNG());
         AssetDatabase.Refresh();
+
+        var localAssetPath = Path.Combine("Assets", ProjectModFolder, DefaultThumbnailImageName);
+        return AssetDatabase.LoadAssetAtPath<Texture2D>(localAssetPath);
     }
 
     private static bool CheckFieldLength(string content, string fieldName)
@@ -108,7 +118,7 @@ public class TCABundler : EditorWindow
     private void OnGUI()
     {
         MainScrollPosition = EditorGUILayout.BeginScrollView(MainScrollPosition, false, true);
-        var status = true;
+        bool isExportAllowed = true;
 
         EditorGUILayout.LabelField("1. Select folder to bundle assets from", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("The location of the assets within the Unity project affect the resulting filepaths. It can be worthwhile to use unique folder names to avoid naming collisions.\n\nThis folder MUST be inside the Project's \"Assets\" folder!", EditorStyles.helpBox);
@@ -137,11 +147,16 @@ public class TCABundler : EditorWindow
             Mod = new ModData();
 
         Mod.Name = EditorGUILayout.TextField("Name", Mod.Name);
-        status &= CheckFieldLength(Mod.Name, GetNiceName(nameof(Mod.Name)));
+        isExportAllowed &= CheckFieldLength(Mod.Name, GetNiceName(nameof(Mod.Name)));
         Mod.DisplayName = EditorGUILayout.TextField("Display Name", Mod.DisplayName);
-        status &= CheckFieldLength(Mod.DisplayName, GetNiceName(nameof(Mod.DisplayName)));
-        Mod.Description = EditorGUILayout.TextField("Description", Mod.Description);
-        status &= CheckFieldLength(Mod.Description, GetNiceName(nameof(Mod.Description)));
+        isExportAllowed &= CheckFieldLength(Mod.DisplayName, GetNiceName(nameof(Mod.DisplayName)));
+
+        EditorGUILayout.BeginHorizontal();
+
+        EditorGUILayout.LabelField("Description", GUILayout.Width(150));
+        Mod.Description = EditorGUILayout.TextArea(Mod.Description, EditorStyles.textArea, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
+        EditorGUILayout.EndHorizontal();
+        isExportAllowed &= CheckFieldLength(Mod.Description, GetNiceName(nameof(Mod.Description)));
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("3. Generate or verify thumbnail", EditorStyles.boldLabel);
@@ -157,28 +172,29 @@ public class TCABundler : EditorWindow
             }
             else
             {
-                TakeSceneScreenshot(Path.Combine(rootPath, DefaultThumbnailImageName), 256, 256);
-                ThumbnailImage = null;
+                ThumbnailImage = TakeSceneScreenshot(Path.Combine(rootPath, DefaultThumbnailImageName), ThumbnailWidth, ThumbnailHeight);
+                Repaint();
             }
-        }
-
-        if (ThumbnailImage == null && File.Exists(Path.Combine(Application.dataPath, ProjectModFolder, DefaultThumbnailImageName)))
-        {
-            ThumbnailImage = (Texture2D)AssetDatabase.LoadAssetAtPath(Path.Combine("Assets", ProjectModFolder, DefaultThumbnailImageName), typeof(Texture2D));
         }
 
         EditorGUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        var scale = EditorGUIUtility.pixelsPerPoint;
-        status &= ThumbnailImage != null;
+        var pixelsPerPoint = EditorGUIUtility.pixelsPerPoint;
+        isExportAllowed &= ThumbnailImage != null;
 
         if (ThumbnailImage != null)
         {
-            GUILayout.Box(ThumbnailImage, GUILayout.Height(256.0f / scale), GUILayout.Width(256.0f / scale));
+            GUILayout.Box(
+                ThumbnailImage,
+                GUILayout.Height(ThumbnailWidth * pixelsPerPoint),
+                GUILayout.Width(ThumbnailHeight * pixelsPerPoint));
         }
         else
         {
-            GUILayout.Box($"\n\n\nMissing thumbnail\n\nPlease generate or create {DefaultThumbnailImageName}", GUILayout.Height(256.0f / scale), GUILayout.Width(256.0f / scale));
+            GUILayout.Box(
+                $"\n\n\nMissing thumbnail image!\n\nPlease generate one or assign an image.",
+                GUILayout.Height(ThumbnailWidth * pixelsPerPoint),
+                GUILayout.Width(ThumbnailHeight * pixelsPerPoint));
         }
 
         GUILayout.FlexibleSpace();
@@ -197,28 +213,28 @@ public class TCABundler : EditorWindow
             }
             else
             {
-                TakeSceneScreenshot(Path.Combine(rootPath, DefaultPreviewImageName), 635, 358);
-                PreviewImage = null;
+                PreviewImage = TakeSceneScreenshot(Path.Combine(rootPath, DefaultPreviewImageName), PreviewWidth, PreviewHeight);
+                Repaint();
             }
-        }
-
-        if (PreviewImage == null && File.Exists(Path.Combine(Application.dataPath, ProjectModFolder, DefaultPreviewImageName)))
-        {
-            PreviewImage = (Texture2D)AssetDatabase.LoadAssetAtPath(Path.Combine("Assets", ProjectModFolder, DefaultPreviewImageName), typeof(Texture2D));
         }
 
         EditorGUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        var previewScale = EditorGUIUtility.pixelsPerPoint;
-        status &= PreviewImage != null;
+        isExportAllowed &= PreviewImage != null;
 
         if (PreviewImage != null)
         {
-            GUILayout.Box(PreviewImage, GUILayout.Height(PreviewImage.height / 2 / previewScale), GUILayout.Width(PreviewImage.width / 2 / previewScale));
+            GUILayout.Box(
+                PreviewImage,
+                GUILayout.Width(PreviewImage.width  / 2 * pixelsPerPoint),
+                GUILayout.Height(PreviewImage.height  / 2 * pixelsPerPoint));
         }
         else
         {
-            GUILayout.Box($"\n\n\nMissing thumbnail\n\nPlease generate or create {DefaultPreviewImageName}", GUILayout.Height(256.0f / scale), GUILayout.Width(256.0f / scale));
+            GUILayout.Box(
+                $"\n\n\nMissing preview image!\n\nPlease generate or assign an image.",
+                GUILayout.Width(PreviewWidth  / 2 * pixelsPerPoint),
+                GUILayout.Height(PreviewHeight  / 2 * pixelsPerPoint));
         }
 
         GUILayout.FlexibleSpace();
@@ -243,8 +259,9 @@ public class TCABundler : EditorWindow
             EditorGUILayout.LabelField("NO ASSETS FOUND!");
         }
 
-        EditorGUILayout.LabelField("6. Export Asset Bundle", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField($"Can be exported directly into your mod's folder inside the game's install.\n\nExample:\nC:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10/{BundleName}", EditorStyles.helpBox);
+        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("6. Export mod to game", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField($"Enter a path for the mod definition and assets to be exported. Typically, this will be your mod's folder inside of the game's Mod folder.\n\nExample:\nC:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10/{BundleName}", EditorStyles.helpBox);
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField(ExportPath, EditorStyles.textField);
 
@@ -257,16 +274,22 @@ public class TCABundler : EditorWindow
             );
             Repaint();
         }
-
         EditorGUILayout.EndHorizontal();
+        if (ExportPath.Length == 0)
+        {
+            EditorGUILayout.HelpBox(
+                "Export path must be defined!",
+                MessageType.Error, true);
+        }
+
         EditorGUILayout.Space(10);
-        status &= ExportPath.Length > 0 && paths.Count > 0;
+        isExportAllowed &= ExportPath.Length > 0 && paths.Count > 0;
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("7. Generate Files", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("You can either Generate as a new mod, or to update an existing one.", EditorStyles.helpBox);
-        EditorGUILayout.BeginHorizontal();
-        GUI.enabled = status;
+        EditorGUILayout.LabelField("You can either Generate as a new mod, or to update an existing one.", EditorStyles.helpBox, GUILayout.ExpandWidth(true));
 
+        GUI.enabled = isExportAllowed;
+        EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Export Bundle"))
         {
             GenerateMODJson();
