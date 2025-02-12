@@ -47,10 +47,10 @@ public class TCABundler : EditorWindow
     private const int PreviewWidth = 635;
     private const int PreviewHeight = 358;
 
-    [MenuItem("Tiny Combat Arena/Open Asset Bundler", priority = 0)]
+    [MenuItem("Tiny Combat Arena/Open Mod Builder", priority = 0)]
     private static void ShowBundlerWindow()
     {
-        var window = GetWindow(typeof(TCABundler), utility: false, title: $"TCA Bundler {VersionMajor}.{VersionMinor}");
+        var window = GetWindow(typeof(TCABundler), utility: false, title: $"TCA Mod Builder {VersionMajor}.{VersionMinor}");
         window.Show();
         window.minSize = new Vector2(600, 800);
     }
