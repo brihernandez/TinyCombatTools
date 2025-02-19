@@ -3,14 +3,14 @@ using Newtonsoft.Json.Converters;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
-using UnityEditor.Rendering.Universal;
 using UnityEngine;
 
 /// <summary>
 /// This is a mirror of the ModData as seen in the game's main codebase.
 /// If any changes are made to this in the main codebase, the tools example must also be updated.
 /// </summary>
-public class ModData
+[System.Serializable]
+public class ModData : System.IEquatable<ModData>
 {
     public string Name = "";
     public string DisplayName = "";
@@ -19,24 +19,51 @@ public class ModData
     public string Preview = "";
     public ulong Id = 0;
     public List<string> Assets = new List<string>();
+
+    public ModData() { }
+
+    public ModData(ModData other)
+    {
+        Name = other.Name;
+        DisplayName = other.DisplayName;
+        Description = other.Description;
+        Thumbnail = other.Thumbnail;
+        Preview = other.Preview;
+        Id = other.Id;
+        Assets = new List<string>(other.Assets);
+    }
+
+    public bool Equals(ModData other)
+    {
+        if (other == null)
+            return false;
+
+        bool areListsEqual = false;
+        if (Assets.Count == other.Assets.Count)
+        {
+            areListsEqual = true;
+            for (int i = 0; i < Assets.Count; ++i)
+                areListsEqual &= Assets[i] == other.Assets[i];
+        }
+
+        return other.Name.Equals(Name)
+            && other.DisplayName.Equals(DisplayName)
+            && other.Description.Equals(Description)
+            && other.Thumbnail.Equals(Thumbnail)
+            && other.Preview.Equals(Preview)
+            && other.Id.Equals(Id)
+            && areListsEqual;
+    }
 }
 
 public class TCABundler : EditorWindow
 {
-    private string ProjectModFolder = "MOD";
-    private string ExportPath = "";
-    private string BundleName = "";
-
-    private Texture2D ThumbnailImage = null;
-    private Texture2D PreviewImage = null;
-
     private Vector2 AssetBundleScrollPosition;
     private Vector2 MainScrollPosition;
 
-    public const int VersionMajor = 2;
-    public const int VersionMinor = 0;
-
+    private static ModSettings Settings = new ModSettings();
     private static ModData Mod = new ModData();
+    private static ModBuilderSettings PersistentSettings = null;
 
     private const string DefaultThumbnailImageName = "thumb.png";
     private const string DefaultPreviewImageName = "preview.png";
@@ -44,18 +71,40 @@ public class TCABundler : EditorWindow
     private const int ThumbnailHeight = 256;
     private const int ThumbnailWidth = 256;
 
-    private const int PreviewWidth = 635;
-    private const int PreviewHeight = 358;
+    private const int PreviewWidth = 1280;
+    private const int PreviewHeight = 720;
 
     [MenuItem("Tiny Combat Arena/Open Mod Builder", priority = 0)]
     private static void ShowBundlerWindow()
     {
-        var window = GetWindow(typeof(TCABundler), utility: false, title: $"TCA Mod Builder {VersionMajor}.{VersionMinor}");
-        window.Show();
+        TCABundler window = (TCABundler)GetWindow(typeof(TCABundler), utility: false, title: $"TCA Mod Builder {Application.version}");
+
+        window.saveChangesMessage = "Saving the state of the Mod Builder window will preserve all your Mod's settings such as name, description, etc. next time you open this Unity project.\n\nSave changes to the Mod Builder tool?";
         window.minSize = new Vector2(600, 800);
+        window.Show();
     }
 
-    private Texture2D TakeSceneScreenshot(string outPath, int X, int Y)
+    private void LoadPersistentSettings()
+    {
+        const string ModSettingsAssetPath =  "Assets/TinyCombatTools/Settings/ModBuilderSettings.asset";
+        PersistentSettings = AssetDatabase.LoadAssetAtPath<ModBuilderSettings>(ModSettingsAssetPath);
+        if (PersistentSettings == null)
+        {
+            Debug.Log($"No Scriptable Object settings file, creating a new one at \"{ModSettingsAssetPath}\".");
+            PersistentSettings = CreateInstance<ModBuilderSettings>();
+            AssetDatabase.CreateAsset(PersistentSettings, ModSettingsAssetPath);
+        }
+
+        Settings = new ModSettings(PersistentSettings.Settings);
+        Mod = new ModData(PersistentSettings.Mod);
+    }
+
+    private void OnEnable()
+    {
+        LoadPersistentSettings();
+    }
+
+    private Texture2D TakeSceneScreenshot(string outPath,  int X, int Y)
     {
         var cam = Camera.main;
         var oldRT = cam.targetTexture;
@@ -72,7 +121,8 @@ public class TCABundler : EditorWindow
         File.WriteAllBytes(outPath, outputTexture.EncodeToPNG());
         AssetDatabase.Refresh();
 
-        var localAssetPath = Path.Combine("Assets", ProjectModFolder, DefaultThumbnailImageName);
+        var savedFileName = Path.GetFileName(outPath);
+        var localAssetPath = Path.Combine("Assets", Settings.ProjectModFolder, savedFileName);
         return AssetDatabase.LoadAssetAtPath<Texture2D>(localAssetPath);
     }
 
@@ -99,31 +149,46 @@ public class TCABundler : EditorWindow
 
     private void GenerateMODJson()
     {
-        BundleName = "assets";
-        Mod.Thumbnail = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(ThumbnailImage));
-        Mod.Preview = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(PreviewImage));
-        Mod.Assets.Clear();
-        Mod.Assets = new List<string>(new[] { BundleName });
+        PersistentSettings.Settings.BundleName = "assets";
+        PersistentSettings.Mod.Thumbnail = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(PersistentSettings.Settings.ThumbnailImage));
+        PersistentSettings.Mod.Preview = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(PersistentSettings.Settings.PreviewImage));
+        PersistentSettings.Mod.Assets.Clear();
+        PersistentSettings.Mod.Assets = new List<string>(new[] { PersistentSettings.Settings.BundleName });
 
         JsonSerializerSettings settings = new JsonSerializerSettings();
         settings.Converters.Add(new StringEnumConverter());
         settings.Formatting = Formatting.Indented;
 
-        var jsonText = JsonConvert.SerializeObject(Mod, settings);
+        var jsonText = JsonConvert.SerializeObject(PersistentSettings.Mod, settings);
         Debug.Log(jsonText);
-        Debug.Log(BundleName);
-        File.WriteAllText(ExportPath + "/Mod.json", jsonText);
+        Debug.Log(PersistentSettings.Settings.BundleName);
+        File.WriteAllText(PersistentSettings.Settings.ExportPath + "/Mod.json", jsonText);
     }
 
     private void OnGUI()
     {
+        if (PersistentSettings == null)
+        {
+            EditorGUILayout.HelpBox("No persistent settings found!\nPlease close and re-open window to correctly load persistent settings!", MessageType.Error);
+            return;
+        }
+
+        if (hasUnsavedChanges)
+        {
+            EditorGUILayout.BeginHorizontal();
+            bool shouldSave = GUILayout.Button("Save Mod Export Settings", GUILayout.ExpandWidth(true));
+            if (shouldSave)
+                SaveChanges();
+            EditorGUILayout.EndHorizontal();
+        }
+
         MainScrollPosition = EditorGUILayout.BeginScrollView(MainScrollPosition, false, true);
         bool isExportAllowed = true;
 
         EditorGUILayout.LabelField("1. Select folder to bundle assets from", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("The location of the assets within the Unity project affect the resulting filepaths. It can be worthwhile to use unique folder names to avoid naming collisions.\n\nThis folder MUST be inside the Project's \"Assets\" folder!", EditorStyles.helpBox);
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField(ProjectModFolder, EditorStyles.textField);
+        EditorGUILayout.LabelField(Settings.ProjectModFolder, EditorStyles.textField);
 
         if (GUILayout.Button("Select", GUILayout.Width(80)))
         {
@@ -133,7 +198,7 @@ public class TCABundler : EditorWindow
                 defaultName: "Default");
 
             if (selectedFolder.StartsWith(Application.dataPath))
-                ProjectModFolder = selectedFolder.Replace(Application.dataPath + "/", "");
+                Settings.ProjectModFolder = selectedFolder.Replace(Application.dataPath + "/", "");
 
             Repaint();
         }
@@ -142,9 +207,6 @@ public class TCABundler : EditorWindow
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("2. Set the mod details", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("This will be used to generate the required Mod.json file.\n\nAny existing Mod.json file inside the asset path will be rewritten!", EditorStyles.helpBox);
-
-        if (Mod == null)
-            Mod = new ModData();
 
         Mod.Name = EditorGUILayout.TextField("Name", Mod.Name);
         isExportAllowed &= CheckFieldLength(Mod.Name, GetNiceName(nameof(Mod.Name)));
@@ -158,21 +220,28 @@ public class TCABundler : EditorWindow
         EditorGUILayout.EndHorizontal();
         isExportAllowed &= CheckFieldLength(Mod.Description, GetNiceName(nameof(Mod.Description)));
 
+        string modIdString = EditorGUILayout.TextField("Steam Mod ID", Mod.Id.ToString());
+        var wasValidModId = ulong.TryParse(modIdString, out Mod.Id);
+        if (!wasValidModId)
+            EditorGUILayout.HelpBox("Invalid SteamID!", MessageType.Error);
+        else if (Mod.Id != 0)
+            EditorGUILayout.HelpBox("Only enter a Steam Mod ID if your mod has already been uploaded to workshop!\nIf your mod is not on Steam Workshop, this must be set to 0!", MessageType.Warning);
+
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("3. Generate or verify thumbnail", EditorStyles.boldLabel);
         EditorGUILayout.LabelField($"A \"{DefaultThumbnailImageName}\" file will be created in the mod folder path if you press \"Generate Thumbnail\" (using your main camera view), or you can add one yourself. Make sure the project folder it's a valid one!", EditorStyles.helpBox);
 
-        ThumbnailImage = EditorGUILayout.ObjectField(ThumbnailImage, typeof(Texture2D), false) as Texture2D;
+        Settings.ThumbnailImage = EditorGUILayout.ObjectField(Settings.ThumbnailImage, typeof(Texture2D), false) as Texture2D;
         if (GUILayout.Button("Generate Thumbnail"))
         {
-            var rootPath = Path.Combine(Application.dataPath, ProjectModFolder);
+            var rootPath = Path.Combine(Application.dataPath, Settings.ProjectModFolder);
             if (!Directory.Exists(rootPath))
             {
                 Debug.LogError($"Project path {rootPath} doesn't exist");
             }
             else
             {
-                ThumbnailImage = TakeSceneScreenshot(Path.Combine(rootPath, DefaultThumbnailImageName), ThumbnailWidth, ThumbnailHeight);
+                Settings.ThumbnailImage = TakeSceneScreenshot(Path.Combine(rootPath, DefaultThumbnailImageName), ThumbnailWidth, ThumbnailHeight);
                 Repaint();
             }
         }
@@ -180,12 +249,12 @@ public class TCABundler : EditorWindow
         EditorGUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         var pixelsPerPoint = EditorGUIUtility.pixelsPerPoint;
-        isExportAllowed &= ThumbnailImage != null;
+        isExportAllowed &= Settings.ThumbnailImage != null;
 
-        if (ThumbnailImage != null)
+        if (Settings.ThumbnailImage != null)
         {
             GUILayout.Box(
-                ThumbnailImage,
+                Settings.ThumbnailImage,
                 GUILayout.Height(ThumbnailWidth * pixelsPerPoint),
                 GUILayout.Width(ThumbnailHeight * pixelsPerPoint));
         }
@@ -203,31 +272,31 @@ public class TCABundler : EditorWindow
         EditorGUILayout.LabelField("4. Generate or verify Preview", EditorStyles.boldLabel);
         EditorGUILayout.LabelField($"A \"{DefaultPreviewImageName}\" file will be created in the mod folder path if you press \"Generate preview\" (using your main camera view), or you can add one yourself. Make sure the project folder it's a valid one!", EditorStyles.helpBox);
 
-        PreviewImage = EditorGUILayout.ObjectField(PreviewImage, typeof(Texture2D), false) as Texture2D;
+        Settings.PreviewImage = EditorGUILayout.ObjectField(Settings.PreviewImage, typeof(Texture2D), false) as Texture2D;
         if (GUILayout.Button("Generate Preview"))
         {
-            var rootPath = Path.Combine(Application.dataPath, ProjectModFolder);
+            var rootPath = Path.Combine(Application.dataPath, Settings.ProjectModFolder);
             if (!Directory.Exists(rootPath))
             {
                 Debug.LogError($"Project path {rootPath} doesn't exist");
             }
             else
             {
-                PreviewImage = TakeSceneScreenshot(Path.Combine(rootPath, DefaultPreviewImageName), PreviewWidth, PreviewHeight);
+                Settings.PreviewImage = TakeSceneScreenshot(Path.Combine(rootPath, DefaultPreviewImageName), PreviewWidth, PreviewHeight);
                 Repaint();
             }
         }
 
         EditorGUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        isExportAllowed &= PreviewImage != null;
+        isExportAllowed &= Settings.PreviewImage != null;
 
-        if (PreviewImage != null)
+        if (Settings.PreviewImage != null)
         {
             GUILayout.Box(
-                PreviewImage,
-                GUILayout.Width(PreviewImage.width  / 2 * pixelsPerPoint),
-                GUILayout.Height(PreviewImage.height  / 2 * pixelsPerPoint));
+                Settings.PreviewImage,
+                GUILayout.Width(Settings.PreviewImage.width  / 2 * pixelsPerPoint),
+                GUILayout.Height(Settings.PreviewImage.height  / 2 * pixelsPerPoint));
         }
         else
         {
@@ -242,7 +311,7 @@ public class TCABundler : EditorWindow
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("5. Verify assets to be exported", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("Below are the assets to be exported, along with their the paths that can be used in JSON config files. Make sure to only export what you need!\n\nExample:\nassets/mod/aircraft/a10a/a10a.fbx\nassets/mod/aircraft/a10a/a10mat.mat\nassets/mod/aircraft/a10a/a10palette.png", EditorStyles.helpBox);
-        var paths = GetAllExportPaths(ProjectModFolder);
+        var paths = GetAllExportPaths(Settings.ProjectModFolder);
 
         if (paths.Count > 0)
         {
@@ -261,13 +330,13 @@ public class TCABundler : EditorWindow
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("6. Export mod to game", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField($"Enter a path for the mod definition and assets to be exported. Typically, this will be your mod's folder inside of the game's Mod folder.\n\nExample:\nC:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10/{BundleName}", EditorStyles.helpBox);
+        EditorGUILayout.LabelField($"Enter a path for the mod definition and assets to be exported. Typically, this will be your mod's folder inside of the game's Mod folder.\n\nExample:\nC:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10/{Settings.BundleName}", EditorStyles.helpBox);
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField(ExportPath, EditorStyles.textField);
+        EditorGUILayout.LabelField(Settings.ExportPath, EditorStyles.textField);
 
         if (GUILayout.Button("Select", GUILayout.Width(80)))
         {
-            ExportPath = EditorUtility.SaveFolderPanel(
+            Settings.ExportPath = EditorUtility.SaveFolderPanel(
                 title: "Select export folder",
                 folder: Application.dataPath,
                 defaultName: ""
@@ -275,7 +344,7 @@ public class TCABundler : EditorWindow
             Repaint();
         }
         EditorGUILayout.EndHorizontal();
-        if (ExportPath.Length == 0)
+        if (Settings.ExportPath.Length == 0)
         {
             EditorGUILayout.HelpBox(
                 "Export path must be defined!",
@@ -283,28 +352,29 @@ public class TCABundler : EditorWindow
         }
 
         EditorGUILayout.Space(10);
-        isExportAllowed &= ExportPath.Length > 0 && paths.Count > 0;
+        isExportAllowed &= Settings.ExportPath.Length > 0 && paths.Count > 0;
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("7. Generate Files", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("You can either Generate as a new mod, or to update an existing one.", EditorStyles.helpBox, GUILayout.ExpandWidth(true));
 
         GUI.enabled = isExportAllowed;
         EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button("Export Bundle"))
+        if (GUILayout.Button("Export Mod"))
         {
+            SaveChanges();
             GenerateMODJson();
-            BuildBundle(Path.Combine(ExportPath, BundleName));
+            BuildBundle(Path.Combine(PersistentSettings.Settings.ExportPath, PersistentSettings.Settings.BundleName));
         }
 
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.BeginHorizontal();
 
         if (GUILayout.Button("Open Export Folder"))
-            System.Diagnostics.Process.Start(Path.GetDirectoryName(ExportPath));
+            System.Diagnostics.Process.Start(Path.GetDirectoryName(Settings.ExportPath));
 
         GUI.enabled = true;
-        bool hasValidExportPath = ExportPath.Length > 0 && paths.Count > 0;
-        var assetListPath = hasValidExportPath ? Path.Combine(Path.GetDirectoryName(ExportPath), "assetlist.txt") : "";
+        bool hasValidExportPath = Settings.ExportPath.Length > 0 && paths.Count > 0;
+        var assetListPath = hasValidExportPath ? Path.Combine(Path.GetDirectoryName(Settings.ExportPath), "assetlist.txt") : "";
         GUI.enabled = hasValidExportPath && File.Exists(assetListPath);
 
         if (GUILayout.Button("Open Asset List"))
@@ -316,6 +386,19 @@ public class TCABundler : EditorWindow
         EditorGUILayout.Space(10);
 
         EditorGUILayout.EndScrollView();
+
+        var wasSettingsChanged = !Settings.Equals(PersistentSettings.Settings);
+        var wasModChanged = !Mod.Equals(PersistentSettings.Mod);
+        hasUnsavedChanges = wasSettingsChanged || wasModChanged;
+    }
+
+    public override void SaveChanges()
+    {
+        base.SaveChanges();
+        PersistentSettings.Settings = new ModSettings(Settings);
+        PersistentSettings.Mod = new ModData(Mod);
+        EditorUtility.SetDirty(PersistentSettings);
+        AssetDatabase.SaveAssetIfDirty(PersistentSettings);
     }
 
     public static List<string> GetAllExportPaths(string projectModFolder)
@@ -358,7 +441,7 @@ public class TCABundler : EditorWindow
 
         var build = new AssetBundleBuild();
         build.assetBundleName = bundleName;
-        build.assetNames = GetAllExportPaths(ProjectModFolder).ToArray();
+        build.assetNames = GetAllExportPaths(PersistentSettings.Settings.ProjectModFolder).ToArray();
 
         // Assets create several temporary files that are unneeded. Write the asset bundle
         // first to a temporary location.

@@ -9,3 +9,6 @@
 
 *.blend1
 *.blend1.meta
+
+/Assets/TinyCombatTools/Settings/ModBuilderSettings.asset
+/Assets/TinyCombatTools/Settings/ModBuilderSettings.asset.meta
