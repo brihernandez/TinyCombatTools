@@ -425,6 +425,7 @@ public class TCABundler : EditorWindow
     public static string CreateAssetPathFromFilePath(string filePath)
     {
         // Everything asset bundle related is forced to lowercase.
+        filePath = Path.GetFullPath(filePath);
         var assetPath = filePath.Replace(Path.GetFullPath(Application.dataPath), "Assets");
         assetPath = assetPath.Replace(Path.DirectorySeparatorChar, '/');
         assetPath = assetPath.ToLower();
