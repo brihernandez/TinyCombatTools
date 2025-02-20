@@ -80,7 +80,7 @@ public class TCABundler : EditorWindow
         TCABundler window = (TCABundler)GetWindow(typeof(TCABundler), utility: false, title: $"TCA Mod Builder {Application.version}");
 
         window.saveChangesMessage = "Saving the state of the Mod Builder window will preserve all your Mod's settings such as name, description, etc. next time you open this Unity project.\n\nSave changes to the Mod Builder tool?";
-        window.minSize = new Vector2(600, 800);
+        window.minSize = new Vector2(PreviewWidth / 2, 800);
         window.Show();
     }
 
@@ -121,8 +121,20 @@ public class TCABundler : EditorWindow
         File.WriteAllBytes(outPath, outputTexture.EncodeToPNG());
         AssetDatabase.Refresh();
 
-        var savedFileName = Path.GetFileName(outPath);
-        var localAssetPath = Path.Combine("Assets", Settings.ProjectModFolder, savedFileName);
+        var localAssetPath = CreateAssetPathFromFilePath(outPath);
+        var savedScreenshotImporter = AssetImporter.GetAtPath(localAssetPath) as TextureImporter;
+
+        // Preview images should look nice when scaled, which means they have to use settings that
+        // are not-normal for Tiny Combat.
+        var previewPresetPath = "Assets/TinyCombatTools/Settings/Presets/PreviewImages.preset";
+        var previewImagePreset = AssetDatabase.LoadAssetAtPath<UnityEditor.Presets.Preset>(previewPresetPath);
+
+        previewImagePreset.ApplyTo(savedScreenshotImporter);
+        bool wasApplied = previewImagePreset.ApplyTo(savedScreenshotImporter);
+        Debug.Log($"Preview image preset applied: {wasApplied}");
+
+        // Reimport the asset with the new smooth settings.
+        AssetDatabase.ImportAsset(localAssetPath, ImportAssetOptions.ForceUpdate);
         return AssetDatabase.LoadAssetAtPath<Texture2D>(localAssetPath);
     }
 
