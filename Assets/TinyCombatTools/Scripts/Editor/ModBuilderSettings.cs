@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [System.Serializable]
-public class ModSettings //: System.IEquatable<ModSettings>
+public class ModSettings
 {
     public string ProjectModFolder = "MOD";
     public string ExportPath = "";

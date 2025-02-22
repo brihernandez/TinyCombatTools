@@ -13,7 +13,9 @@ using UnityEngine;
 public class ModData : System.IEquatable<ModData>
 {
     public string Name = "";
+    public string ShortName = "";
     public string DisplayName = "";
+    public string Summary = "";
     public string Description = "";
     public string Thumbnail = "";
     public string Preview = "";
@@ -25,8 +27,10 @@ public class ModData : System.IEquatable<ModData>
     public ModData(ModData other)
     {
         Name = other.Name;
+        ShortName = other.ShortName;
         DisplayName = other.DisplayName;
         Description = other.Description;
+        Summary = other.Summary;
         Thumbnail = other.Thumbnail;
         Preview = other.Preview;
         Id = other.Id;
@@ -46,12 +50,14 @@ public class ModData : System.IEquatable<ModData>
                 areListsEqual &= Assets[i] == other.Assets[i];
         }
 
-        return other.Name.Equals(Name)
-            && other.DisplayName.Equals(DisplayName)
-            && other.Description.Equals(Description)
-            && other.Thumbnail.Equals(Thumbnail)
-            && other.Preview.Equals(Preview)
-            && other.Id.Equals(Id)
+        return other.Name == Name
+            && other.ShortName == ShortName
+            && other.DisplayName == DisplayName
+            && other.Description == Description
+            && other.Summary == Summary
+            && other.Thumbnail == Thumbnail
+            && other.Preview == Preview
+            && other.Id == Id
             && areListsEqual;
     }
 }
@@ -159,7 +165,7 @@ public class TCABundler : EditorWindow
         return ObjectNames.NicifyVariableName(fieldName);
     }
 
-    private void GenerateMODJson()
+    private void WriteModJSONToDisk()
     {
         PersistentSettings.Settings.BundleName = "assets";
         PersistentSettings.Mod.Thumbnail = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(PersistentSettings.Settings.ThumbnailImage));
@@ -220,16 +226,30 @@ public class TCABundler : EditorWindow
         EditorGUILayout.LabelField("2. Set the mod details", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("This will be used to generate the required Mod.json file.\n\nAny existing Mod.json file inside the asset path will be rewritten!", EditorStyles.helpBox);
 
-        Mod.Name = EditorGUILayout.TextField("Name", Mod.Name);
-        isExportAllowed &= CheckFieldLength(Mod.Name, GetNiceName(nameof(Mod.Name)));
-        Mod.DisplayName = EditorGUILayout.TextField("Display Name", Mod.DisplayName);
-        isExportAllowed &= CheckFieldLength(Mod.DisplayName, GetNiceName(nameof(Mod.DisplayName)));
+        Mod.Name = EditorGUILayout.TextField(
+            new GUIContent("Name", "The name of the mod itself. Should match the name of the mod's folder."),
+            Mod.Name);
+        Mod.ShortName = EditorGUILayout.TextField(
+            new GUIContent("Short Name", "The name displayed in the mod browser's mod list. Should be short enough to fit on a single line."),
+            Mod.ShortName);
+        Mod.DisplayName = EditorGUILayout.TextField(
+            new GUIContent("Display Name", "The easily readable name of the mod. This is the full name of your mod, and the name which your mod will be listed under if uploaded to Steam Workshop."),
+            Mod.DisplayName);
+        Mod.Summary = EditorGUILayout.TextField(
+            new GUIContent("Summary", "Short sentence used to describe your mod in the ingame mod browser list."),
+            Mod.Summary);
 
+        // Use a horizontal group so the description textarea can be nice and big.
         EditorGUILayout.BeginHorizontal();
-
-        EditorGUILayout.LabelField("Description", GUILayout.Width(150));
+        EditorGUILayout.LabelField(
+            new GUIContent("Description", "The full description of your mod, seen when the mod is selected in the ingame Mod Browser. This will also be the default text when the mod gets uploaded to the Steam Workshop."),
+            GUILayout.Width(150));
         Mod.Description = EditorGUILayout.TextArea(Mod.Description, EditorStyles.textArea, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
         EditorGUILayout.EndHorizontal();
+
+        // These three fields are REQUIRED for a mod to export correctly.
+        isExportAllowed &= CheckFieldLength(Mod.Name, GetNiceName(nameof(Mod.Name)));
+        isExportAllowed &= CheckFieldLength(Mod.DisplayName, GetNiceName(nameof(Mod.DisplayName)));
         isExportAllowed &= CheckFieldLength(Mod.Description, GetNiceName(nameof(Mod.Description)));
 
         string modIdString = EditorGUILayout.TextField("Steam Mod ID", Mod.Id.ToString());
@@ -237,7 +257,7 @@ public class TCABundler : EditorWindow
         if (!wasValidModId)
             EditorGUILayout.HelpBox("Invalid SteamID!", MessageType.Error);
         else if (Mod.Id != 0)
-            EditorGUILayout.HelpBox("Only enter a Steam Mod ID if your mod has already been uploaded to workshop!\nIf your mod is not on Steam Workshop, this must be set to 0!", MessageType.Warning);
+            EditorGUILayout.HelpBox("Only enter a Steam Mod ID if your mod has already been uploaded to workshop!\nUse this to ensure that your mod can be correctly updated from the Modding menu in Tiny Combat Arena.\nIf your mod is not on Steam Workshop, this must be set to 0!", MessageType.Warning);
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("3. Generate or verify thumbnail", EditorStyles.boldLabel);
@@ -342,7 +362,7 @@ public class TCABundler : EditorWindow
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("6. Export mod to game", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField($"Enter a path for the mod definition and assets to be exported. Typically, this will be your mod's folder inside of the game's Mod folder.\n\nExample:\nC:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10/{Settings.BundleName}", EditorStyles.helpBox);
+        EditorGUILayout.LabelField($"Enter a path for the mod definition and assets to be exported. Typically, this will be your mod's folder inside of the game's Mod folder.\n\nExample:\nC:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10/", EditorStyles.helpBox);
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField(Settings.ExportPath, EditorStyles.textField);
 
@@ -374,7 +394,7 @@ public class TCABundler : EditorWindow
         if (GUILayout.Button("Export Mod"))
         {
             SaveChanges();
-            GenerateMODJson();
+            WriteModJSONToDisk();
             BuildBundle(Path.Combine(PersistentSettings.Settings.ExportPath, PersistentSettings.Settings.BundleName));
         }
 
