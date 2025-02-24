@@ -206,7 +206,7 @@ public class TCABundler : EditorWindow
         EditorGUILayout.LabelField("1. Select folder to bundle assets from", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("The location of the assets within the Unity project affect the resulting filepaths. It can be worthwhile to use unique folder names to avoid naming collisions.\n\nThis folder MUST be inside the Project's \"Assets\" folder!", EditorStyles.helpBox);
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField(Settings.ProjectModFolder, EditorStyles.textField);
+        Settings.ProjectModFolder = EditorGUILayout.TextField(Settings.ProjectModFolder);
 
         if (GUILayout.Button("Select", GUILayout.Width(80)))
         {
@@ -364,8 +364,7 @@ public class TCABundler : EditorWindow
         EditorGUILayout.LabelField("6. Export mod to game", EditorStyles.boldLabel);
         EditorGUILayout.LabelField($"Enter a path for the mod definition and assets to be exported. Typically, this will be your mod's folder inside of the game's Mod folder.\n\nExample:\nC:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10/", EditorStyles.helpBox);
         EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField(Settings.ExportPath, EditorStyles.textField);
-
+        Settings.ExportPath = EditorGUILayout.TextField(Settings.ExportPath);
         if (GUILayout.Button("Select", GUILayout.Width(80)))
         {
             Settings.ExportPath = EditorUtility.SaveFolderPanel(
