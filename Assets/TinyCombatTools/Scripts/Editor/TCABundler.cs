@@ -192,14 +192,13 @@ public class TCABundler : EditorWindow
             return;
         }
 
-        if (hasUnsavedChanges)
-        {
-            EditorGUILayout.BeginHorizontal();
-            bool shouldSave = GUILayout.Button("Save Mod Export Settings", GUILayout.ExpandWidth(true));
-            if (shouldSave)
-                SaveChanges();
-            EditorGUILayout.EndHorizontal();
-        }
+        // Save button at the top is only usable if changes exist.
+        EditorGUILayout.BeginHorizontal();
+        GUI.enabled = hasUnsavedChanges;
+        if (GUILayout.Button("Save Mod Export Settings", GUILayout.ExpandWidth(true)))
+            SaveChanges();
+        GUI.enabled = true;
+        EditorGUILayout.EndHorizontal();
 
         MainScrollPosition = EditorGUILayout.BeginScrollView(MainScrollPosition, false, true);
         bool isExportAllowed = true;
