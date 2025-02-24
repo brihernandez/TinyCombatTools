@@ -167,7 +167,7 @@ public class TCABundler : EditorWindow
 
     private void WriteModJSONToDisk()
     {
-        PersistentSettings.Settings.BundleName = "assets";
+        PersistentSettings.Settings.BundleName = $"assets{PersistentSettings.Mod.Name}";
         PersistentSettings.Mod.Thumbnail = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(PersistentSettings.Settings.ThumbnailImage));
         PersistentSettings.Mod.Preview = CreateAssetPathFromFilePath(AssetDatabase.GetAssetPath(PersistentSettings.Settings.PreviewImage));
         PersistentSettings.Mod.Assets.Clear();
