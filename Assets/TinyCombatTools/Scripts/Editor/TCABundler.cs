@@ -180,6 +180,7 @@ public class TCABundler : EditorWindow
         var jsonText = JsonConvert.SerializeObject(PersistentSettings.Mod, settings);
         Debug.Log(jsonText);
         Debug.Log(PersistentSettings.Settings.BundleName);
+        Directory.CreateDirectory(PersistentSettings.Settings.ExportPath);
         File.WriteAllText(PersistentSettings.Settings.ExportPath + "/Mod.json", jsonText);
     }
 
