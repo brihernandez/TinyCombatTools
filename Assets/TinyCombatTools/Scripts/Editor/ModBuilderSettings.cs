@@ -1,3 +1,4 @@
+using UnityEditor;
 using UnityEngine;
 
 [System.Serializable]
@@ -42,4 +43,12 @@ public class ModBuilderSettings : ScriptableObject
 {
     public ModSettings Settings = new ModSettings();
     public ModData Mod = new ModData();
+
+    public static ModBuilderSettings CreateDefaultModBuilderSettings()
+    {
+        const string DefaultModSettingsPath = "Assets/TinyCombatTools/Settings/Mods/DefaultMod.asset";
+        var modBuilderSettings = CreateInstance<ModBuilderSettings>();
+        AssetDatabase.CreateAsset(modBuilderSettings, DefaultModSettingsPath);
+        return modBuilderSettings;
+    }
 }

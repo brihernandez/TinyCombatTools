@@ -81,33 +81,27 @@ public class TCABundler : EditorWindow
     private const int PreviewHeight = 720;
 
     [MenuItem("Tiny Combat Arena/Open Mod Builder", priority = 0)]
-    private static void ShowBundlerWindow()
+    private static TCABundler ShowBundlerWindow()
     {
         TCABundler window = (TCABundler)GetWindow(typeof(TCABundler), utility: false, title: $"TCA Mod Builder {Application.version}");
 
         window.saveChangesMessage = "Saving the state of the Mod Builder window will preserve all your Mod's settings such as name, description, etc. next time you open this Unity project.\n\nSave changes to the Mod Builder tool?";
         window.minSize = new Vector2(PreviewWidth / 2, 800);
         window.Show();
+        return window;
     }
 
-    private void LoadPersistentSettings()
+    public void LoadPersistentSettings(ModBuilderSettings settings)
     {
-        const string ModSettingsAssetPath =  "Assets/TinyCombatTools/Settings/ModBuilderSettings.asset";
-        PersistentSettings = AssetDatabase.LoadAssetAtPath<ModBuilderSettings>(ModSettingsAssetPath);
-        if (PersistentSettings == null)
-        {
-            Debug.Log($"No Scriptable Object settings file, creating a new one at \"{ModSettingsAssetPath}\".");
-            PersistentSettings = CreateInstance<ModBuilderSettings>();
-            AssetDatabase.CreateAsset(PersistentSettings, ModSettingsAssetPath);
-        }
-
+        PersistentSettings = settings;
         Settings = new ModSettings(PersistentSettings.Settings);
         Mod = new ModData(PersistentSettings.Mod);
     }
 
     private void OnEnable()
     {
-        LoadPersistentSettings();
+        if (PersistentSettings != null)
+            LoadPersistentSettings(PersistentSettings);
     }
 
     private Texture2D TakeSceneScreenshot(string outPath,  int X, int Y)
@@ -186,19 +180,30 @@ public class TCABundler : EditorWindow
 
     private void OnGUI()
     {
-        if (PersistentSettings == null)
-        {
-            EditorGUILayout.HelpBox("No persistent settings found!\nPlease close and re-open window to correctly load persistent settings!", MessageType.Error);
-            return;
-        }
-
         // Save button at the top is only usable if changes exist.
         EditorGUILayout.BeginHorizontal();
+
+        var newPersistentSettings = EditorGUILayout.ObjectField(PersistentSettings, typeof(ModBuilderSettings), false) as ModBuilderSettings;
+        if (PersistentSettings != newPersistentSettings)
+            LoadPersistentSettings(newPersistentSettings);
+
         GUI.enabled = hasUnsavedChanges;
         if (GUILayout.Button("Save Mod Export Settings", GUILayout.ExpandWidth(true)))
             SaveChanges();
         GUI.enabled = true;
         EditorGUILayout.EndHorizontal();
+
+        if (PersistentSettings == null)
+        {
+            EditorGUILayout.HelpBox("Assign a Mod Builder Settings file to start!", MessageType.Error);
+            EditorGUILayout.HelpBox("Use the button below to create a new mod from scratch.\nA new Mod Builder Settings file can be created at any time in the Project window by right clicking\nCreate->Tiny Combat Arena->Mod Builder Settings.", MessageType.Info);
+            if (GUILayout.Button("New Mod Builder Settings", GUILayout.Height(40)))
+            {
+                var newMod = ModBuilderSettings.CreateDefaultModBuilderSettings();
+                LoadPersistentSettings(newMod);
+            }
+            return;
+        }
 
         MainScrollPosition = EditorGUILayout.BeginScrollView(MainScrollPosition, false, true);
         bool isExportAllowed = true;
@@ -222,6 +227,9 @@ public class TCABundler : EditorWindow
         }
 
         EditorGUILayout.EndHorizontal();
+        if (Settings.ProjectModFolder == "MOD")
+            EditorGUILayout.HelpBox("It's advised to make this a unique name, e.g. \"MOD_A10\", in order to avoid potential path conflicts with other mods.", MessageType.Info);
+
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("2. Set the mod details", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("This will be used to generate the required Mod.json file.\n\nAny existing Mod.json file inside the asset path will be rewritten!", EditorStyles.helpBox);
@@ -242,7 +250,7 @@ public class TCABundler : EditorWindow
         // Use a horizontal group so the description textarea can be nice and big.
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField(
-            new GUIContent("Description", "The full description of your mod, seen when the mod is selected in the ingame Mod Browser. This will also be the default text when the mod gets uploaded to the Steam Workshop."),
+            new GUIContent("Description", "The full description of your mod, seen when the mod is selected in the ingame Mod Browser. This will also be the default text if the mod gets uploaded to Steam Workshop."),
             GUILayout.Width(150));
         Mod.Description = EditorGUILayout.TextArea(Mod.Description, EditorStyles.textArea, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
         EditorGUILayout.EndHorizontal();
@@ -256,12 +264,12 @@ public class TCABundler : EditorWindow
         var wasValidModId = ulong.TryParse(modIdString, out Mod.Id);
         if (!wasValidModId)
             EditorGUILayout.HelpBox("Invalid SteamID!", MessageType.Error);
-        else if (Mod.Id != 0)
-            EditorGUILayout.HelpBox("Only enter a Steam Mod ID if your mod has already been uploaded to workshop!\nUse this to ensure that your mod can be correctly updated from the Modding menu in Tiny Combat Arena.\nIf your mod is not on Steam Workshop, this must be set to 0!", MessageType.Warning);
+        if (Mod.Id != 0)
+            EditorGUILayout.HelpBox("Only enter a Steam Mod ID if your mod has already been uploaded to workshop!\nUse this to ensure that your mod can be correctly updated from the Modding menu in Tiny Combat Arena.\nIf your mod is NOT on Steam Workshop, this MUST be set to 0!", MessageType.Warning);
 
         EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("3. Generate or verify thumbnail", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField($"A \"{DefaultThumbnailImageName}\" file will be created in the mod folder path if you press \"Generate Thumbnail\" (using your main camera view), or you can add one yourself. Make sure the project folder it's a valid one!", EditorStyles.helpBox);
+        EditorGUILayout.LabelField("3. Assign or Generate Thumbnail", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField($"This 1:1 screenshot will be used as the mod's icon in the ingame Mod Browser.\n\n If generating a screenshot, a \"{DefaultThumbnailImageName}\" will be created in the mod folder path (using your main camera view). Ensure the project folder is valid!", EditorStyles.helpBox);
 
         Settings.ThumbnailImage = EditorGUILayout.ObjectField(Settings.ThumbnailImage, typeof(Texture2D), false) as Texture2D;
         if (GUILayout.Button("Generate Thumbnail"))
@@ -301,8 +309,8 @@ public class TCABundler : EditorWindow
         GUILayout.FlexibleSpace();
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("4. Generate or verify Preview", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField($"A \"{DefaultPreviewImageName}\" file will be created in the mod folder path if you press \"Generate preview\" (using your main camera view), or you can add one yourself. Make sure the project folder it's a valid one!", EditorStyles.helpBox);
+        EditorGUILayout.LabelField("4. Assign or Generate Steam Screenshot", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField($"This 16:9 screenshot will be used as the preview screenshot on Steam Workshop.\n\n If generating a screenshot, a \"{DefaultPreviewImageName}\" will be created in the mod folder path (using your main camera view). Ensure the project folder is valid!", EditorStyles.helpBox);
 
         Settings.PreviewImage = EditorGUILayout.ObjectField(Settings.PreviewImage, typeof(Texture2D), false) as Texture2D;
         if (GUILayout.Button("Generate Preview"))
@@ -357,12 +365,12 @@ public class TCABundler : EditorWindow
         }
         else
         {
-            EditorGUILayout.LabelField("NO ASSETS FOUND!");
+            EditorGUILayout.HelpBox("NO ASSETS FOUND!", MessageType.Error);
         }
 
         EditorGUILayout.Space(10);
-        EditorGUILayout.LabelField("6. Export mod to game", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField($"Enter a path for the mod definition and assets to be exported. Typically, this will be your mod's folder inside of the game's Mod folder.\n\nExample:\nC:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10/", EditorStyles.helpBox);
+        EditorGUILayout.LabelField("6. Set path to export mod definition and assets", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField($"Enter a path for the mod definition and assets to be exported. Typically, this will be your mod's folder inside of the game's Mod folder. You may have to create a new folder for your mod.\n\nExample:\nC:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10/", EditorStyles.helpBox);
         EditorGUILayout.BeginHorizontal();
         Settings.ExportPath = EditorGUILayout.TextField(Settings.ExportPath);
         if (GUILayout.Button("Select", GUILayout.Width(80)))
@@ -386,7 +394,7 @@ public class TCABundler : EditorWindow
         isExportAllowed &= Settings.ExportPath.Length > 0 && paths.Count > 0;
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("7. Generate Files", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("You can either Generate as a new mod, or to update an existing one.", EditorStyles.helpBox, GUILayout.ExpandWidth(true));
+        EditorGUILayout.LabelField("Exports the mod.json definition file, and the associated assets.", EditorStyles.helpBox, GUILayout.ExpandWidth(true));
 
         GUI.enabled = isExportAllowed;
         EditorGUILayout.BeginHorizontal();
@@ -405,7 +413,7 @@ public class TCABundler : EditorWindow
 
         GUI.enabled = true;
         bool hasValidExportPath = Settings.ExportPath.Length > 0 && paths.Count > 0;
-        var assetListPath = hasValidExportPath ? Path.Combine(Path.GetDirectoryName(Settings.ExportPath), "assetlist.txt") : "";
+        var assetListPath = hasValidExportPath ? Path.Combine(Settings.ExportPath, "assetlist.txt") : "";
         GUI.enabled = hasValidExportPath && File.Exists(assetListPath);
 
         if (GUILayout.Button("Open Asset List"))
@@ -490,7 +498,7 @@ public class TCABundler : EditorWindow
         var assetListFilePath = Path.GetFullPath(Path.Combine(folderPath, "assetlist.txt"));
         var assetListText = new System.Text.StringBuilder();
         assetListText.AppendLine($"Below are the paths for all the assets included in the asset bundle \"{bundleName}\"");
-        assetListText.AppendLine("Example usage in an aircraft definition:\n\"ModelPath\": \"assets/microfalcon/export/aircraft/resources/a10a/a10a.fbx\"");
+        assetListText.AppendLine("Example usage in an aircraft definition:\n\"ModelPath\": \"assets/mod_attack/aircraft/a10a/a10a.fbx\"");
         assetListText.AppendLine();
 
         foreach (var path in build.assetNames)
