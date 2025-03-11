@@ -29,45 +29,48 @@ This is the recommended way as it's easiest to update.
 4. Using Unity Hub, add the repository as a project
 5. Open the project through Unity Hub
 
-## TCA Bundler
+## TCA Mod Builder
 
 ![](Screenshots/bundler.png)
 
-The main feature of this toolset is the **TCA Bundler**. It allows the creation of asset bundles that can be loaded by Tiny Combat Arena's mod system. The instructions for how to use them are contained within the tool itself.
+The main feature of this toolset is the **TCA Mod Builder**. It allows for the creation of mods that can be loaded into the Tiny Combat Arena Mod Manager. Valid mods can then be uploaded to [the game's Steam Workshop page](https://steamcommunity.com/app/1347550/workshop/).
 
-### How to Use Exported Asset Bundles
+A mod consists of the `mod.json`, describing the properties of the mod. Mods also usually contain an asset bundle that can be automatically built from this tool.
 
-For this example, the exported bundle will simply be named `assets`, but the name can be anything
-you choose.
+### How to use the TCA Mod Builder to create a simple mod
 
-1. Open the `DemoScene` scene to view examples in their native environment
-2. Open the TCA Bundler from the dropdown menu `Tiny Combat Arena -> Open Asset Bundler`
-3. Follow the export process in the TCA Bundler tool
-4. Put the exported `assets` file into your mod's directory (`TinyCombatArena/Mods/(YourMod)`)
-5. In your mod's `Mod.json`, add an entry under `Assets` for the newly exported `assets` file
-6. Referencing `assetlist.json`, apply asset paths where desired
+For this example, the exported mod will be called `A10Warthog`, but the name can be anything of your choosing.
 
-Example `Mod.json` with the new `assets` file in use:
-```json
-{
-  "Name": "A-10",
-  "DisplayName": "A-10 Mod",
-  "Description:": "Adds the A-10A",
-  "Assets": [
-    "assets"
-  ]
-}
+1. Open the `DemoScene` view view examples in their native environment.
+2. Import whatever models you plan to export to the game.
+3. Open the Mod Builder from the dropdown menu `Tiny Combat Arena -> Open Mod Builder`.
+4. Follow the export process as outlined in the Mod Builder. Make sure to fill out all the fields.
+5. Set the path to your mod's folder, which will look something like `C:/Program Files/Steam/steamapps/common/TinyCombatArena/Mods/A10Warthog`
+6. Click the `Export Mod` button to export the `mod.json`, `assetlist.json`, and asset bundle.
+7. Referencing `assetlist.json`, apply asset paths where desired in your mod's data files.
+
+### What the Mod Builder **DOES** do
+
+* Can be used to create a template for a mod that can be loaded ingame.
+* Can export various assets such as weapon, vehicle, and aircraft models to the game.
+* Can update a mod you've already created with new assets
+
+### What the Mod Builder **DOES NOT** do
+
+* Does not create the data files necessary in your mod to use the assets you exported. You must do this yourself through editing the relevant json files. Reference game's core data for examples.
+* Does not upload your mod to Steam Workshop. This must be done ingame.
+
+### How to use exported assets
+
+Exported assets must be referenced by a very specific path that can be found in the `assetlist.json` file. A typical `assetlist.json` will look something like this:
+
 ```
-
-Multiple asset bundles can be used if so desired. On game start, this mod will now load the `assets` bundle and any assets inside of it. Once the assets have been exported, an `assetlist.json` will have also been created. This file contains all the directories that can be referenced in the JSON data files.
-
-A typical `assetlist.json` will look something like this:
-
-```
-assets/mod/aircraft/a10a/a10a.fbx
-assets/mod/aircraft/a10a/a10mat.mat
-assets/mod/aircraft/a10a/a10palette.png
-assets/mod/aircraft/a10a/a10aanimator.controller
+assets/mod_attack/preview.png
+assets/mod_attack/thumb.png
+assets/mod_attack/aircraft/a10a/a10a.fbx
+assets/mod_attack/aircraft/a10a/a10mat.mat
+assets/mod_attack/aircraft/a10a/a10palette.png
+assets/mod_attack/aircraft/a10a/a10aanimator.controller
 ```
 
 In the below example usage in an aircraft definition, notice how the `ModelPath` and `AnimatorPath` use the full filenames. **The full path as listed in `assetlist.json` must be used, including extensions!**
@@ -82,6 +85,28 @@ In the below example usage in an aircraft definition, notice how the `ModelPath`
 "SpawnOffset": -1.875,
 "SpawnRotation": 4.1,
 ```
+
+### Avoiding conflicts between mods
+
+When mods are loaded through the game's Mod Manager, conflicts between assets can prevent a mod from being loaded. It's worth mentioning that while assets cannot have any naming collisions, it's okay for a mod's *Data* (i.e. JSONs) to override another mod's (or even the game's core) data.
+
+Things that can cause asset conflicts are:
+
+#### **Identical asset paths**.
+
+Use a root folder name unique to your mod. In the above example, the name `mod_attack` is used, but the more specific the better. Consider using your name as part of the root mod folder. Naming collisions between assets of different mods will prevent a mod from being loaded!
+
+#### **Identical asset GUIDs**
+
+This one is harder to debug, but essentially you don't want a single asset to be used in multiple mods. For example, if you have a missile model that is shared between two different mods, consider breaking out that missile out into its own mod that is loaded *alongside* those two other mods.
+
+Another example, is if you try to export the example F-4, M60, or SA-2, you are likely to run into a GUID conflict because these are the literal assets used by the game.
+
+*This is getting very in the weeds, but you can force the creation of a unique GUID for an object by deleting the asset's `.meta` file and letting Unity generate a new one.*
+
+# Uploading to Steam Workshop
+
+PLACEHOLDER
 
 # Reference
 
@@ -192,6 +217,17 @@ In order to remain visible when coplanar with the ground, the shadows have two m
 **It's highly recommended that you use the `ShadowDepthOffset` and `ShadowHeightOffset` as described in the [Adding shadows](#adding-shadows-with-shadowdepthoffset-and-shadowheightoffset) section.**
 
 # Changelog
+
+### v2.2 March 5 2025
+* Mod settings can be saved and loaded to make working on multiple mods easier
+* When the mod builder opens for the first time you are prompted to select a mod profile
+* Updated many of the labels and text fields for clarity, correctness, and consistency
+
+### v2.1 February 7 2025
+* Big overhaul of the Asset Bundler to make it into a self-contained Mod Bundler
+* Bundler will automatically create a `Mod.json` with details for your mod
+* Added support for exporting and generating a mod description with both a thumbnail and preview image
+* Added many new fields to the mod definition
 
 ### v1.1 October 31 2023
 * Renamed the `Materials` folder to `SharedMaterials`
