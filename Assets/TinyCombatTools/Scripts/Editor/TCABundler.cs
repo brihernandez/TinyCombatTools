@@ -228,11 +228,11 @@ public class TCABundler : EditorWindow
 
         EditorGUILayout.EndHorizontal();
         if (Settings.ProjectModFolder == "MOD")
-            EditorGUILayout.HelpBox("It's advised to make this a unique name, e.g. \"MOD_A10\", in order to avoid potential path conflicts with other mods.", MessageType.Info);
+            EditorGUILayout.HelpBox("It's HIGHLY ADVISED to make this a unique name, e.g. \"MOD_A10\", in order to avoid potential path conflicts with other mods.", MessageType.Warning);
 
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("2. Set the mod details", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("This will be used to generate the required Mod.json file.\n\nAny existing Mod.json file inside the asset path will be rewritten!", EditorStyles.helpBox);
+        EditorGUILayout.LabelField("This will be used to generate the required Mod.json file.\n\nAny existing Mod.json file inside the asset path will be overwritten!", EditorStyles.helpBox);
 
         Mod.Name = EditorGUILayout.TextField(
             new GUIContent("Name", "The name of the mod itself. Should match the name of the mod's folder."),
@@ -350,7 +350,7 @@ public class TCABundler : EditorWindow
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("5. Verify assets to be exported", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("Below are the assets to be exported, along with their the paths that can be used in JSON config files. Make sure to only export what you need!\n\nExample:\nassets/mod/aircraft/a10a/a10a.fbx\nassets/mod/aircraft/a10a/a10mat.mat\nassets/mod/aircraft/a10a/a10palette.png", EditorStyles.helpBox);
+        EditorGUILayout.LabelField("Below are the assets to be exported, along with their the paths that can be used in JSON config files. Make sure to only export what you need!\n\nExample:\nassets/mod_a10/aircraft/a10a/a10a.fbx\nassets/mod_a10/aircraft/a10a/a10mat.mat\nassets/mod_a10/aircraft/a10a/a10palette.png", EditorStyles.helpBox);
         var paths = GetAllExportPaths(Settings.ProjectModFolder);
 
         if (paths.Count > 0)
